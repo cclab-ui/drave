@@ -2,7 +2,16 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#192720">
+<meta name="description" content="모은 위스키와 오늘 마신 위스키를 기록하는 앱">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DRAVÉ">
 <title>DRAVÉ — 나의 위스키 기록</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
@@ -17,7 +26,7 @@ html,body{background:#101a15;color:var(--cream);font-family:'Noto Sans KR',sans-
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select,textarea{font:inherit;color:var(--cream)}
 .app{max-width:440px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:96px;box-shadow:0 0 60px #000}
-header{padding:22px 20px 10px;display:flex;align-items:flex-end;justify-content:space-between}
+header{padding:calc(22px + env(safe-area-inset-top)) 20px 10px;display:flex;align-items:flex-end;justify-content:space-between}
 .logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:30px;letter-spacing:.02em;color:var(--cream);line-height:1.1}
 .logo small{display:block;font-family:'Noto Sans KR';font-size:11px;letter-spacing:.05em;color:var(--muted);margin-top:4px}
 .date{font-size:12px;color:var(--muted);text-align:right}
@@ -135,6 +144,13 @@ input[type=range]{accent-color:var(--amber);padding:0!important;background:none!
 .ac button{display:block;width:100%;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
 .ac button:last-child{border:0}.ac button:hover{background:#33473c}
 .ac b{display:block;font-size:14px}.ac span{font-size:11px;color:var(--muted)}
+.install{margin:6px 16px 0;display:none;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.install.on{display:flex}
+.install img{width:40px;height:40px;border-radius:10px}
+.install .tx{flex:1;font-size:13px;line-height:1.4}.install .tx b{display:block;font-size:14px}
+.install .x{color:var(--dim);font-size:18px;padding:4px}
+.ios-step{display:flex;gap:12px;align-items:center;background:var(--panel2);border-radius:12px;padding:12px;margin-bottom:8px;font-size:14px}
+.ios-step i{flex:none;width:26px;height:26px;border-radius:50%;background:var(--amber);color:#192720;font-style:normal;font-weight:700;display:grid;place-items:center}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--amber2);color:#192720;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:20}
 .toast.on{opacity:1}
 </style>
@@ -148,6 +164,7 @@ input[type=range]{accent-color:var(--amber);padding:0!important;background:none!
 
   <!-- 홈 -->
   <section class="view on" id="v-home">
+    <div class="install" id="installBar"><img src="icons/icon-192.png" alt=""><div class="tx"><b>DRAVÉ 앱 설치하기</b>홈 화면에 추가하면 앱처럼 쓸 수 있어요</div><button class="btn" style="padding:8px 14px;font-size:13px" onclick="doInstall()">설치</button><button class="x" onclick="hideInstall()" aria-label="닫기">×</button></div>
     <div class="hero">
       <div class="k">TONIGHT'S POUR</div>
       <div class="t" id="heroText"></div>
@@ -500,6 +517,30 @@ function openBottleDetail(id){
   <div style="display:flex;flex-direction:column;gap:8px">${ps.map(p=>pourCard(p,false)).join('')||'<div class="empty" style="margin:0">아직 마신 기록이 없어요</div>'}</div>`);
 }
 render();
+
+/* ── 홈 화면 설치 (PWA) ── */
+let deferredPrompt=null;
+const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const installHidden=()=>{try{return localStorage.getItem('drave-install-hide')==='1'}catch(e){return false}};
+function showInstall(){if(!isStandalone()&&!installHidden())$('installBar').classList.add('on')}
+function hideInstall(){$('installBar').classList.remove('on');try{localStorage.setItem('drave-install-hide','1')}catch(e){}}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;showInstall()});
+window.addEventListener('appinstalled',()=>{$('installBar').classList.remove('on');toast('DRAVÉ가 설치됐어요 🥃')});
+if(isIOS)showInstall();
+async function doInstall(){
+  if(deferredPrompt){deferredPrompt.prompt();const r=await deferredPrompt.userChoice;deferredPrompt=null;if(r.outcome==='accepted')$('installBar').classList.remove('on');return}
+  sheet(`<h3>홈 화면에 추가하기</h3>
+   ${isIOS?`<div class="ios-step"><i>1</i><span>사파리 아래쪽의 <b>공유 버튼</b>(네모에 위쪽 화살표)을 눌러요</span></div>
+   <div class="ios-step"><i>2</i><span>목록을 내려서 <b>홈 화면에 추가</b>를 눌러요</span></div>
+   <div class="ios-step"><i>3</i><span>오른쪽 위 <b>추가</b>를 누르면 DRAVÉ 아이콘이 생겨요</span></div>
+   <p style="font-size:12px;color:var(--muted);margin:10px 0 16px">카카오톡·인스타 안에서 열었다면, 먼저 사파리로 열어 주세요.</p>`
+   :`<div class="ios-step"><i>1</i><span>브라우저 오른쪽 위 <b>메뉴(⋮)</b>를 눌러요</span></div>
+   <div class="ios-step"><i>2</i><span><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 눌러요</span></div>
+   <p style="font-size:12px;color:var(--muted);margin:10px 0 16px">카카오톡·인스타 안에서 열었다면, 먼저 크롬으로 열어 주세요.</p>`}
+   <button class="btn full" onclick="closeSheet()">알겠어요</button>`);
+}
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 </script>
 </body>
 </html>
