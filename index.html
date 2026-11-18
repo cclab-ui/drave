@@ -567,8 +567,34 @@ const cloud={
 };
 
 /* 로그인 화면 */
-let authMode='login';
+let authMode='start';
 function authScreen(msg){
+  if(authMode==='start'){
+    $('auth').innerHTML=`<div class="auth-in">
+      <img src="icons/icon-192.png" alt="" class="auth-logo">
+      <div class="logo" style="text-align:center;font-size:36px">DRAVÉ</div>
+      <p class="auth-sub">모은 위스키와 오늘의 한 잔을 기록해요</p>
+      <form onsubmit="event.preventDefault();startAnon()">
+        <div class="f"><label>닉네임만 정하면 바로 시작해요</label><input id="sNick" maxlength="12" required placeholder="예) 피트러버 (12자 이내)"></div>
+        <label class="chk"><input type="checkbox" id="sAge" required> 만 19세 이상입니다</label>
+        <label class="chk"><input type="checkbox" id="sPriv" required> <span><a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다</span></label>
+        ${msg?`<p class="auth-msg">${msg}</p>`:''}
+        <button class="btn full" id="sBtn" style="margin-top:8px">시작하기</button>
+      </form>
+      <button class="auth-link" onclick="authMode='login';authScreen()">이메일 계정으로 로그인</button>
+      <p class="auth-foot">DRAVÉ는 만 19세 이상을 위한 서비스예요 · 지나친 음주는 건강에 해로워요</p>
+    </div>`;
+    $('auth').classList.add('on');return;
+  }
+  _authScreenEmail(msg);
+}
+async function startAnon(){
+  const nickname=$('sNick').value.trim();if(!nickname)return;
+  $('sBtn').disabled=true;$('sBtn').textContent='잠시만요…';
+  const {error}=await sb.auth.signInAnonymously({options:{data:{nickname}}});
+  if(error){console.error(error);authScreen(/anonymous/i.test(error.message)?'지금은 바로 시작하기를 쓸 수 없어요. 잠시 후 다시 시도해 주세요.':errKo(error))}
+}
+function _authScreenEmail(msg){
   $('auth').innerHTML=`<div class="auth-in">
     <img src="icons/icon-192.png" alt="" class="auth-logo">
     <div class="logo" style="text-align:center;font-size:36px">DRAVÉ</div>
@@ -584,7 +610,7 @@ function authScreen(msg){
       ${msg?`<p class="auth-msg">${msg}</p>`:''}
       <button class="btn full" id="aBtn" style="margin-top:8px">${authMode==='login'?'로그인':'가입하고 시작하기'}</button>
     </form>
-    ${authMode==='login'?`<button class="auth-link" onclick="resetPw()">비밀번호를 잊었어요</button>`:''}
+    <button class="auth-link" onclick="authMode='start';authScreen()">← 닉네임으로 바로 시작하기</button>
     <p class="auth-foot">DRAVÉ는 만 19세 이상을 위한 서비스예요 · 지나친 음주는 건강에 해로워요</p>
   </div>`;
   $('auth').classList.add('on');
@@ -613,10 +639,16 @@ function errKo(e){const m=(e.message||'').toLowerCase();
   if(m.includes('rate limit')||m.includes('too many'))return '요청이 너무 많아요. 잠시 후 다시 시도해 주세요.';
   if(m.includes('password'))return '비밀번호는 6자 이상으로 해 주세요.';
   return '문제가 생겼어요: '+e.message;}
-async function logout(){await sb.auth.signOut();S={bottles:[],pours:[]};render();go('home')}
+let IS_ANON=false;
+function logout(){
+  if(IS_ANON){sheet(`<h3>정말 나갈까요?</h3><p style="color:var(--muted);font-size:14px;margin-bottom:18px">닉네임으로 시작한 계정은 <b style="color:var(--cream)">이 기기에만</b> 연결돼 있어요. 나가면 다시 들어올 수 없고, 지금까지의 기록도 볼 수 없게 돼요.</p>
+    <div class="rowbtn"><button class="btn ghost" onclick="closeSheet()">취소</button><button class="btn" style="background:var(--red);color:var(--cream)" onclick="closeSheet();doLogout()">나가기</button></div>`);return}
+  doLogout();
+}
+async function doLogout(){await sb.auth.signOut();S={bottles:[],pours:[]};authMode='start';render();go('home')}
 
 async function onLogin(user){
-  CUR_USER=user.id;CUR_EMAIL=user.email||'';NICK=(user.user_metadata&&user.user_metadata.nickname)||'';
+  CUR_USER=user.id;CUR_EMAIL=user.email||'';IS_ANON=!!user.is_anonymous;NICK=(user.user_metadata&&user.user_metadata.nickname)||'';
   $('auth').classList.remove('on');
   try{const c=JSON.parse(localStorage.getItem(KEY+'-'+CUR_USER));if(c){S=c;render()}}catch(e){}
   try{S=await cloud.load();save();render()}catch(e){console.error(e);toast('기록을 불러오지 못했어요')}
@@ -633,9 +665,10 @@ const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 function drawAcct(){
   $('acct').innerHTML=`<div class="box"><div style="display:flex;align-items:center;gap:12px">
     <div class="avatar">${esc((NICK||'?').slice(0,1))}</div>
-    <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:16px">${NICK?esc(NICK):'닉네임 없음'}</div><div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis">${esc(CUR_EMAIL)}</div></div>
+    <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:16px">${NICK?esc(NICK):'닉네임 없음'}</div><div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis">${IS_ANON?'이 기기에 저장된 계정':esc(CUR_EMAIL)}</div></div>
     <button class="btn ghost" style="padding:7px 12px;font-size:12px" onclick="openNick()">닉네임 변경</button></div>
-    <button class="auth-link" style="margin:14px 0 0" onclick="logout()">로그아웃</button></div>`;
+    ${IS_ANON?`<p style="font-size:12px;color:var(--amber2);background:var(--panel2);border-radius:10px;padding:10px;margin-top:12px;line-height:1.5">기록은 서버에 안전하게 저장돼요. 다만 이 계정은 이 기기·이 브라우저에 연결돼 있어서, 브라우저 데이터를 지우거나 다른 기기에서는 이어서 볼 수 없어요. 홈 화면에 설치해서 쓰면 가장 안전해요.</p>`:''}
+    <button class="auth-link" style="margin:14px 0 0" onclick="logout()">${IS_ANON?'계정에서 나가기':'로그아웃'}</button></div>`;
   render();
 }
 function openNick(first){
