@@ -574,6 +574,7 @@ function authScreen(msg){
     <div class="seg" style="margin:0 0 18px"><button class="${authMode==='login'?'on':''}" onclick="authMode='login';authScreen()">로그인</button><button class="${authMode==='signup'?'on':''}" onclick="authMode='signup';authScreen()">회원가입</button></div>
     <form onsubmit="event.preventDefault();doAuth()">
       <div class="f"><label>이메일</label><input id="aEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+      ${authMode==='signup'?`<p style="font-size:12px;color:var(--amber2);margin:-6px 0 12px">비밀번호를 잊었을 때 이 이메일로 찾을 수 있어요. 정확히 입력해 주세요.</p>`:''}
       <div class="f"><label>비밀번호${authMode==='signup'?' (6자 이상)':''}</label><input id="aPw" type="password" minlength="6" autocomplete="${authMode==='signup'?'new-password':'current-password'}" required></div>
       ${authMode==='signup'?`<label class="chk"><input type="checkbox" id="aAge" required> 만 19세 이상입니다</label>
       <label class="chk"><input type="checkbox" id="aPriv" required> <span><a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다</span></label>`:''}
