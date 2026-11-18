@@ -1,5 +1,5 @@
 // DRAVÉ 오프라인 지원: 앱 화면을 저장해 두고, 인터넷이 없을 때도 열리게 해요.
-const CACHE = 'drave-v4';
+const CACHE = 'drave-v5';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -15,7 +15,7 @@ self.addEventListener('fetch', e => {
   if (url.origin !== location.origin) return;
   // 최신 버전 우선, 인터넷이 없으면 저장본 사용
   e.respondWith(
-    fetch(req).then(res => {
+    fetch(req, {cache: 'no-cache'}).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(req, copy));
       return res;

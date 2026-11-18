@@ -140,7 +140,11 @@ nav .add div{width:54px;height:54px;border-radius:50%;background:var(--amber);di
 .f input:focus,.f select:focus,.f textarea:focus{border-color:var(--amber)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .two>*{min-width:0}
-.f input[type=date]{-webkit-appearance:none;appearance:none;min-width:0;min-height:46px;text-align:left}
+.f{min-width:0}
+.f input,.f select,.f textarea{display:block;max-width:100%;min-width:0;box-sizing:border-box}
+.f input[type=date]{-webkit-appearance:none;appearance:none;width:100%;min-height:48px;text-align:left;line-height:1.2}
+.f input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
+.f input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .opts{display:flex;flex-wrap:wrap;gap:6px}
 .opts .chip{cursor:pointer}
 .rate{display:flex;gap:6px;font-size:28px}
