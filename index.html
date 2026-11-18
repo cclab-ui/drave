@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DRAVÉ — 나의 위스키 기록</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#192720; --panel:#1f2f27; --panel2:#283a31; --line:#33473c;
+  --amber:#c4a77a; --amber2:#e2cba3; --cream:#f3e8d3; --muted:#a89a85; --dim:#82725f;
+  --red:#c8644a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#101a15;color:var(--cream);font-family:'Noto Sans KR',sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--cream)}
+.app{max-width:440px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:96px;box-shadow:0 0 60px #000}
+header{padding:22px 20px 10px;display:flex;align-items:flex-end;justify-content:space-between}
+.logo{font-family:'Noto Sans KR',sans-serif;font-weight:700;font-size:30px;letter-spacing:.02em;color:var(--cream);line-height:1.1}
+.logo small{display:block;font-family:'Noto Sans KR';font-size:11px;letter-spacing:.05em;color:var(--muted);margin-top:4px}
+.date{font-size:12px;color:var(--muted);text-align:right}
+h2{font-family:'Gowun Batang',serif;font-size:19px;font-weight:700;margin:22px 20px 12px;display:flex;justify-content:space-between;align-items:center}
+h2 .link{font-family:'Noto Sans KR';font-size:12px;color:var(--amber);font-weight:500}
+.view{display:none}.view.on{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+
+/* hero */
+.hero{margin:6px 16px 0;border-radius:22px;padding:22px;background:radial-gradient(120% 120% at 100% 0%,#4d4a36 0%,#24372d 50%,#1c2b24 100%);border:1px solid #3c5245;position:relative;overflow:hidden}
+.hero .k{font-size:12px;color:var(--amber2);letter-spacing:.08em}
+.hero .t{font-family:'Gowun Batang',serif;font-size:22px;line-height:1.4;margin:6px 0 16px}
+.hero .t b{color:var(--amber2)}
+.hero .glass{position:absolute;right:-6px;bottom:-8px;width:120px;opacity:.9}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--amber);color:#192720;font-weight:700;padding:11px 18px;border-radius:999px;font-size:14px}
+.btn.ghost{background:transparent;color:var(--amber2);border:1px solid var(--amber)}
+.btn.full{width:100%;justify-content:center;padding:14px}
+
+/* cards */
+.list{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.pour{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;align-items:center}
+.pour .ic{width:44px;height:44px;border-radius:12px;background:var(--panel2);display:grid;place-items:center;flex:none}
+.pour .nm{font-weight:700;font-size:15px}
+.pour .mt{font-size:12px;color:var(--muted);margin-top:2px}
+.pour .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11px;padding:3px 8px;border-radius:999px;background:#2e4035;color:var(--amber2)}
+.stars{color:var(--amber);font-size:13px;letter-spacing:1px;margin-left:auto;flex:none;align-self:flex-start}
+.empty{color:var(--dim);font-size:13px;text-align:center;padding:26px;border:1px dashed var(--line);border-radius:16px;margin:0 16px}
+
+/* shelf */
+.filters{display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto}
+.chip{flex:none;font-size:13px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.on{background:var(--amber);border-color:var(--amber);color:#192720;font-weight:700}
+.shelf{margin:0 16px;padding:18px 10px 0;border-radius:18px;background:linear-gradient(#1f3028,#16231d)}
+.row{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-bottom:6px;border-bottom:8px solid #82725f;margin-bottom:18px;box-shadow:0 10px 12px -10px #000}
+.bt{display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 0}
+.bt svg{height:96px;transition:transform .2s}
+.bt:hover svg{transform:translateY(-4px)}
+.bt span{font-size:11px;color:var(--muted);text-align:center;line-height:1.25;height:28px;overflow:hidden}
+
+/* stats */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stat .n{font-family:'Cormorant Garamond',serif;font-size:36px;color:var(--amber2);line-height:1}
+.stat .l{font-size:12px;color:var(--muted);margin-top:6px}
+.bar{display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:10px}
+.bar .tr{flex:1;height:8px;background:var(--panel2);border-radius:9px;overflow:hidden}
+.bar .tr i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--amber2));border-radius:9px}
+.bar .lb{width:64px;color:var(--muted)}
+.box{margin:0 16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:12px}
+.cal .w{color:var(--dim);padding-bottom:4px}
+.cal .d{aspect-ratio:1;border-radius:10px;display:grid;place-items:center;color:var(--muted);position:relative}
+.cal .d.has{background:#33473c;color:var(--amber2);font-weight:700}
+.cal .d.has.l2{background:#82725f;color:var(--cream)}.cal .d.has.l3{background:var(--amber);color:#192720}
+.cal .d.today{outline:1px solid var(--amber2)}
+.calhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-family:'Gowun Batang';font-size:16px}
+.calhead button{width:30px;height:30px;border-radius:50%;background:var(--panel2)}
+
+/* nav */
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;background:rgba(25,39,32,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px calc(10px + env(safe-area-inset-bottom));z-index:5}
+nav button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--dim)}
+nav button.on{color:var(--amber2)}
+.seg{display:flex;margin:6px 16px 0;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
+.seg button{flex:1;padding:9px;border-radius:999px;font-size:14px;color:var(--muted)}
+.seg button.on{background:var(--amber);color:#192720;font-weight:700}
+.spend-hero{margin:0 16px;border-radius:20px;padding:20px;background:radial-gradient(120% 120% at 100% 0%,#4d4a36 0%,#24372d 55%,#1c2b24 100%);border:1px solid #3c5245}
+.spend-hero .l{font-size:12px;color:var(--amber2)}
+.spend-hero .big{font-size:32px;font-weight:700;margin:4px 0 14px;letter-spacing:-.01em}
+.spend-hero .big small{font-size:16px;font-weight:500;margin-left:2px}
+.spend-hero .sub{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid #ffffff1a;padding-top:12px}
+.spend-hero .sub b{display:block;font-size:15px}.spend-hero .sub span{font-size:11px;color:var(--muted)}
+.months{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;align-items:end;height:130px}
+.months .m{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;font-size:10px;color:var(--dim)}
+.months .m i{display:block;width:100%;max-width:18px;border-radius:5px 5px 2px 2px;background:var(--panel2);min-height:3px}
+.months .m.has i{background:linear-gradient(var(--amber2),var(--amber))}
+.months .m.cur span{color:var(--cream);font-weight:700}
+.months .m em{font-style:normal;font-size:9px;color:var(--amber2);height:11px;white-space:nowrap}
+nav svg{width:22px;height:22px}
+nav .add{margin-top:-24px}
+nav .add div{width:54px;height:54px;border-radius:50%;background:var(--amber);display:grid;place-items:center;box-shadow:0 6px 20px #c4a77a44;color:#192720}
+
+/* sheet */
+.dim{position:fixed;inset:0;background:#000a;display:none;z-index:9;align-items:flex-end;justify-content:center}
+.dim.on{display:flex}
+.sheet{width:100%;max-width:440px;max-height:90vh;overflow:auto;background:var(--panel);border-radius:24px 24px 0 0;padding:10px 20px 28px;animation:up .25s}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 14px}
+.sheet h3{font-family:'Gowun Batang';font-size:20px;margin-bottom:16px}
+.f{margin-bottom:14px}
+.f label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.f input,.f select,.f textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;outline:none}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--amber)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts .chip{cursor:pointer}
+.rate{display:flex;gap:6px;font-size:28px}
+.rate button{color:var(--line)}.rate button.on{color:var(--amber)}
+input[type=range]{accent-color:var(--amber);padding:0!important;background:none!important;border:0!important}
+.detail-top{display:flex;gap:16px;align-items:center;margin-bottom:16px}
+.detail-top svg{height:130px;flex:none}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.rowbtn{display:flex;gap:8px;margin-top:16px}
+.rowbtn .btn{flex:1;justify-content:center}
+.del{color:var(--red);font-size:13px;margin-top:14px;width:100%;text-align:center}
+.preview{display:flex;gap:16px;align-items:center;background:radial-gradient(circle at 30% 40%,#2f4438,#1f2f27 70%);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:16px}
+.preview #pv{flex:none;width:76px;display:grid;place-items:center}
+.pvside{flex:1}.pvside label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+.pvside .chip{font-size:12px;padding:5px 10px}
+.sw{display:flex;gap:8px}.sw button{width:26px;height:26px;border-radius:50%;border:2px solid var(--line)}.sw button.on{border-color:var(--amber2);transform:scale(1.12)}
+.ac{display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--panel2);border:1px solid var(--amber);border-radius:12px;overflow:hidden;z-index:3;box-shadow:0 10px 24px #000a}
+.ac button{display:block;width:100%;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+.ac button:last-child{border:0}.ac button:hover{background:#33473c}
+.ac b{display:block;font-size:14px}.ac span{font-size:11px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--amber2);color:#192720;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:20}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">DRAVÉ<small>나의 위스키 기록장</small></div>
+    <div class="date" id="today"></div>
+  </header>
+
+  <!-- 홈 -->
+  <section class="view on" id="v-home">
+    <div class="hero">
+      <div class="k">TONIGHT'S POUR</div>
+      <div class="t" id="heroText"></div>
+      <button class="btn" onclick="openPour()">+ 오늘의 한 잔 기록</button>
+      <svg class="glass" viewBox="0 0 120 120"><path d="M28 30h64l-6 70a8 8 0 0 1-8 7H42a8 8 0 0 1-8-7z" fill="#ffffff10" stroke="#e2cba366" stroke-width="2"/><path d="M33 68h54l-3 32a6 6 0 0 1-6 5H42a6 6 0 0 1-6-5z" fill="#c4a77a" opacity=".9"/><rect x="46" y="52" width="18" height="18" rx="3" fill="#ffffff30" transform="rotate(-12 55 61)"/></svg>
+    </div>
+    <h2>오늘 마신 위스키 <span class="link" id="todayCount"></span></h2>
+    <div class="list" id="todayList"></div>
+    <h2>오늘 밤엔 이 병 어때요? <span class="link" onclick="go('shelf')">컬렉션 →</span></h2>
+    <div class="list" id="suggest"></div>
+    <h2>최근 기록 <span class="link" onclick="go('log')">전체 →</span></h2>
+    <div class="list" id="recent"></div>
+  </section>
+
+  <!-- 컬렉션 -->
+  <section class="view" id="v-shelf">
+    <h2>나의 위스키 장 <button class="btn ghost" style="padding:7px 14px;font-size:12px" onclick="openBottle()">+ 병 추가</button></h2>
+    <div class="filters" id="filters"></div>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <!-- 기록 -->
+  <section class="view" id="v-log">
+    <h2>마신 기록</h2>
+    <div class="box" style="margin-bottom:6px">
+      <div class="calhead"><button onclick="moveMonth(-1)">‹</button><span id="calTitle"></span><button onclick="moveMonth(1)">›</button></div>
+      <div class="cal" id="cal"></div>
+    </div>
+    <h2 id="logTitle" style="font-size:16px"></h2>
+    <div class="list" id="logList"></div>
+  </section>
+
+  <!-- 통계 -->
+  <section class="view" id="v-stats">
+    <div class="seg"><button class="on" onclick="seg(0)">취향</button><button onclick="seg(1)">지출</button></div>
+    <div id="rp-taste">
+    <h2>나의 취향 리포트</h2>
+    <div class="grid" id="statGrid"></div>
+    <h2 style="font-size:16px">자주 느낀 맛</h2>
+    <div class="box" id="flavorBars"></div>
+    <h2 style="font-size:16px">즐겨 마시는 방식</h2>
+    <div class="box" id="styleBars"></div>
+    </div>
+    <div id="rp-spend" style="display:none">
+      <h2>컬렉션 지출 내역</h2>
+      <div class="spend-hero" id="spendHero"></div>
+      <h2 style="font-size:16px">월별 지출 <span class="link" id="yearSel"></span></h2>
+      <div class="box"><div class="months" id="months"></div></div>
+      <h2 style="font-size:16px">종류별 지출</h2>
+      <div class="box" id="typeSpend"></div>
+      <h2 style="font-size:16px">구매 내역</h2>
+      <div class="list" id="buyList"></div>
+      <p style="font-size:11px;color:var(--dim);text-align:center;margin:18px 16px 0">구매가를 적은 병만 계산돼요 · 병 정보에서 언제든 수정할 수 있어요</p>
+    </div>
+    <button class="del" style="margin-top:28px;color:var(--dim)" onclick="sheet('<h3>모든 기록을 지울까요?</h3><p style=&quot;color:var(--muted);font-size:14px;margin-bottom:18px&quot;>모은 병과 마신 기록이 모두 사라지고 되돌릴 수 없어요.</p><div class=&quot;rowbtn&quot;><button class=&quot;btn ghost&quot; onclick=&quot;closeSheet()&quot;>취소</button><button class=&quot;btn&quot; style=&quot;background:var(--red);color:var(--cream)&quot; onclick=&quot;clearAll()&quot;>모두 지우기</button></div>')">모든 기록 지우기</button>
+  </section>
+</div>
+
+<nav>
+  <button class="on" data-v="home" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
+  <button data-v="shelf" onclick="go('shelf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6v4l2 3v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9l2-3z"/><path d="M7 13h10"/></svg>컬렉션</button>
+  <button class="add" onclick="openPour()"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></div></button>
+  <button data-v="log" onclick="go('log')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>기록</button>
+  <button data-v="stats" onclick="go('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>리포트</button>
+</nav>
+
+<div class="dim" id="dim" onclick="if(event.target===this)closeSheet()"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='dram-v1';
+const TYPES=['싱글몰트','블렌디드','블렌디드 몰트','버번','테네시','라이','재패니즈','아이리시','캐나디안','기타'];
+/* 검색용 위스키 목록: [이름, 종류, 나라, 숙성, 도수, 영문] — 정보는 참고용 */
+const DB=[["글렌피딕 12년","싱글몰트","스코틀랜드","12","40","Glenfiddich 12"],["글렌피딕 15년","싱글몰트","스코틀랜드","15","40","Glenfiddich 15"],["글렌피딕 18년","싱글몰트","스코틀랜드","18","40","Glenfiddich 18"],["글렌피딕 21년 그란 리저바","싱글몰트","스코틀랜드","21","40","Glenfiddich 21 Gran Reserva"],["글렌피딕 23년 그랑 크뤼","싱글몰트","스코틀랜드","23","40","Glenfiddich 23 Grand Cru"],["글렌피딕 프로젝트 XX","싱글몰트","스코틀랜드","","47","Glenfiddich Project XX"],["글렌리벳 12년","싱글몰트","스코틀랜드","12","40","Glenlivet 12"],["글렌리벳 15년 프렌치 오크","싱글몰트","스코틀랜드","15","40","Glenlivet 15 French Oak"],["글렌리벳 18년","싱글몰트","스코틀랜드","18","40","Glenlivet 18"],["글렌리벳 파운더스 리저브","싱글몰트","스코틀랜드","","40","Glenlivet Founder's Reserve"],["글렌리벳 나두라 오로로소","싱글몰트","스코틀랜드","","","Glenlivet Nadurra Oloroso"],["맥캘란 12년 셰리 오크","싱글몰트","스코틀랜드","12","40","Macallan 12 Sherry Oak"],["맥캘란 12년 더블 캐스크","싱글몰트","스코틀랜드","12","40","Macallan 12 Double Cask"],["맥캘란 12년 트리플 캐스크","싱글몰트","스코틀랜드","12","40","Macallan 12 Triple Cask"],["맥캘란 15년 더블 캐스크","싱글몰트","스코틀랜드","15","43","Macallan 15 Double Cask"],["맥캘란 18년 셰리 오크","싱글몰트","스코틀랜드","18","43","Macallan 18 Sherry Oak"],["맥캘란 18년 더블 캐스크","싱글몰트","스코틀랜드","18","43","Macallan 18 Double Cask"],["맥캘란 클래식 컷","싱글몰트","스코틀랜드","","","Macallan Classic Cut"],["발베니 12년 더블우드","싱글몰트","스코틀랜드","12","40","Balvenie 12 DoubleWood"],["발베니 12년 아메리칸 오크","싱글몰트","스코틀랜드","12","43","Balvenie 12 American Oak"],["발베니 12년 싱글 배럴","싱글몰트","스코틀랜드","12","47.8","Balvenie 12 Single Barrel"],["발베니 14년 캐리비안 캐스크","싱글몰트","스코틀랜드","14","43","Balvenie 14 Caribbean Cask"],["발베니 16년 프렌치 오크","싱글몰트","스코틀랜드","16","47.6","Balvenie 16 French Oak"],["발베니 17년 더블우드","싱글몰트","스코틀랜드","17","43","Balvenie 17 DoubleWood"],["발베니 21년 포트우드","싱글몰트","스코틀랜드","21","40","Balvenie 21 PortWood"],["글렌모렌지 오리지널 10년","싱글몰트","스코틀랜드","10","40","Glenmorangie Original 10"],["글렌모렌지 라산타 12년","싱글몰트","스코틀랜드","12","43","Glenmorangie Lasanta 12"],["글렌모렌지 퀸타 루반 14년","싱글몰트","스코틀랜드","14","46","Glenmorangie Quinta Ruban 14"],["글렌모렌지 넥타도르 12년","싱글몰트","스코틀랜드","12","46","Glenmorangie Nectar d'Or 12"],["글렌모렌지 18년","싱글몰트","스코틀랜드","18","43","Glenmorangie 18"],["글렌모렌지 시그넷","싱글몰트","스코틀랜드","","46","Glenmorangie Signet"],["라프로익 10년","싱글몰트","스코틀랜드","10","40","Laphroaig 10"],["라프로익 10년 캐스크 스트렝스","싱글몰트","스코틀랜드","10","","Laphroaig 10 Cask Strength"],["라프로익 쿼터 캐스크","싱글몰트","스코틀랜드","","48","Laphroaig Quarter Cask"],["라프로익 셀렉트","싱글몰트","스코틀랜드","","40","Laphroaig Select"],["라프로익 로어","싱글몰트","스코틀랜드","","48","Laphroaig Lore"],["라프로익 PX 캐스크","싱글몰트","스코틀랜드","","48","Laphroaig PX Cask"],["아드벡 10년","싱글몰트","스코틀랜드","10","46","Ardbeg 10"],["아드벡 우거다일","싱글몰트","스코틀랜드","","54.2","Ardbeg Uigeadail"],["아드벡 코리브레칸","싱글몰트","스코틀랜드","","57.1","Ardbeg Corryvreckan"],["아드벡 안 오","싱글몰트","스코틀랜드","","46.6","Ardbeg An Oa"],["아드벡 위 비스티 5년","싱글몰트","스코틀랜드","5","47.4","Ardbeg Wee Beastie"],["라가불린 8년","싱글몰트","스코틀랜드","8","48","Lagavulin 8"],["라가불린 16년","싱글몰트","스코틀랜드","16","43","Lagavulin 16"],["라가불린 디스틸러스 에디션","싱글몰트","스코틀랜드","","43","Lagavulin Distillers Edition"],["탈리스커 10년","싱글몰트","스코틀랜드","10","45.8","Talisker 10"],["탈리스커 스톰","싱글몰트","스코틀랜드","","45.8","Talisker Storm"],["탈리스커 스카이","싱글몰트","스코틀랜드","","45.8","Talisker Skye"],["탈리스커 18년","싱글몰트","스코틀랜드","18","45.8","Talisker 18"],["탈리스커 디스틸러스 에디션","싱글몰트","스코틀랜드","","45.8","Talisker Distillers Edition"],["쿨일라 12년","싱글몰트","스코틀랜드","12","43","Caol Ila 12"],["쿨일라 모흐","싱글몰트","스코틀랜드","","43","Caol Ila Moch"],["보모어 12년","싱글몰트","스코틀랜드","12","40","Bowmore 12"],["보모어 15년","싱글몰트","스코틀랜드","15","43","Bowmore 15"],["보모어 18년","싱글몰트","스코틀랜드","18","43","Bowmore 18"],["보모어 넘버원","싱글몰트","스코틀랜드","","40","Bowmore No.1"],["브룩라디 더 클래식 라디","싱글몰트","스코틀랜드","","50","Bruichladdich Classic Laddie"],["포트 샬롯 10년","싱글몰트","스코틀랜드","10","50","Port Charlotte 10"],["옥토모어","싱글몰트","스코틀랜드","","","Octomore"],["부나하벤 12년","싱글몰트","스코틀랜드","12","46.3","Bunnahabhain 12"],["부나하벤 18년","싱글몰트","스코틀랜드","18","46.3","Bunnahabhain 18"],["부나하벤 토이테크 어 다","싱글몰트","스코틀랜드","","46.3","Bunnahabhain Toiteach a Dha"],["킬호만 마키어 베이","싱글몰트","스코틀랜드","","46","Kilchoman Machir Bay"],["글렌드로낙 12년","싱글몰트","스코틀랜드","12","43","GlenDronach 12"],["글렌드로낙 15년 리바이벌","싱글몰트","스코틀랜드","15","46","GlenDronach 15 Revival"],["글렌드로낙 18년 알라딕","싱글몰트","스코틀랜드","18","46","GlenDronach 18 Allardice"],["글렌알라키 10년 캐스크 스트렝스","싱글몰트","스코틀랜드","10","","GlenAllachie 10 Cask Strength"],["글렌알라키 12년","싱글몰트","스코틀랜드","12","46","GlenAllachie 12"],["글렌알라키 15년","싱글몰트","스코틀랜드","15","46","GlenAllachie 15"],["아벨라워 12년","싱글몰트","스코틀랜드","12","40","Aberlour 12"],["아벨라워 16년","싱글몰트","스코틀랜드","16","40","Aberlour 16"],["아벨라워 아부나흐","싱글몰트","스코틀랜드","","","Aberlour A'bunadh"],["달모어 12년","싱글몰트","스코틀랜드","12","40","Dalmore 12"],["달모어 15년","싱글몰트","스코틀랜드","15","40","Dalmore 15"],["달모어 18년","싱글몰트","스코틀랜드","18","43","Dalmore 18"],["달모어 시가 몰트 리저브","싱글몰트","스코틀랜드","","44","Dalmore Cigar Malt"],["하이랜드 파크 12년 바이킹 아너","싱글몰트","스코틀랜드","12","40","Highland Park 12"],["하이랜드 파크 18년 바이킹 프라이드","싱글몰트","스코틀랜드","18","43","Highland Park 18"],["오반 14년","싱글몰트","스코틀랜드","14","43","Oban 14"],["오반 리틀 베이","싱글몰트","스코틀랜드","","43","Oban Little Bay"],["글렌킨치 12년","싱글몰트","스코틀랜드","12","43","Glenkinchie 12"],["크라겐모어 12년","싱글몰트","스코틀랜드","12","40","Cragganmore 12"],["달위니 15년","싱글몰트","스코틀랜드","15","43","Dalwhinnie 15"],["클라이넬리시 14년","싱글몰트","스코틀랜드","14","46","Clynelish 14"],["로얄 로크나가 12년","싱글몰트","스코틀랜드","12","40","Royal Lochnagar 12"],["올드 풀트니 12년","싱글몰트","스코틀랜드","12","40","Old Pulteney 12"],["벤리악 10년","싱글몰트","스코틀랜드","10","43","BenRiach 10"],["벤리악 더 스모키 10","싱글몰트","스코틀랜드","10","46","BenRiach Smoky 10"],["토마틴 12년","싱글몰트","스코틀랜드","12","43","Tomatin 12"],["토마틴 레전드","싱글몰트","스코틀랜드","","43","Tomatin Legacy"],["글렌그란트 10년","싱글몰트","스코틀랜드","10","40","Glen Grant 10"],["글렌그란트 12년","싱글몰트","스코틀랜드","12","43","Glen Grant 12"],["글렌그란트 아보랄리스","싱글몰트","스코틀랜드","","40","Glen Grant Arboralis"],["글렌 스코시아 더블 캐스크","싱글몰트","스코틀랜드","","46","Glen Scotia Double Cask"],["스프링뱅크 10년","싱글몰트","스코틀랜드","10","46","Springbank 10"],["스프링뱅크 15년","싱글몰트","스코틀랜드","15","46","Springbank 15"],["롱로우 피티드","싱글몰트","스코틀랜드","","46","Longrow Peated"],["글렌고인 12년","싱글몰트","스코틀랜드","12","43","Glengoyne 12"],["글렌고인 18년","싱글몰트","스코틀랜드","18","43","Glengoyne 18"],["딘스톤 12년","싱글몰트","스코틀랜드","12","46.3","Deanston 12"],["탐두 12년","싱글몰트","스코틀랜드","12","43","Tamdhu 12"],["오켄토션 쓰리우드","싱글몰트","스코틀랜드","","43","Auchentoshan Three Wood"],["오켄토션 12년","싱글몰트","스코틀랜드","12","40","Auchentoshan 12"],["아란 10년","싱글몰트","스코틀랜드","10","46","Arran 10"],["글렌파클라스 12년","싱글몰트","스코틀랜드","12","43","Glenfarclas 12"],["글렌파클라스 15년","싱글몰트","스코틀랜드","15","46","Glenfarclas 15"],["글렌파클라스 105","싱글몰트","스코틀랜드","","60","Glenfarclas 105"],["모틀락 12년","싱글몰트","스코틀랜드","12","43.4","Mortlach 12"],["크레이겔라키 13년","싱글몰트","스코틀랜드","13","46","Craigellachie 13"],["올트모어 12년","싱글몰트","스코틀랜드","12","46","Aultmore 12"],["토민타울 16년","싱글몰트","스코틀랜드","16","40","Tomintoul 16"],["글렌 모레이 클래식","싱글몰트","스코틀랜드","","40","Glen Moray Classic"],["스페이번 10년","싱글몰트","스코틀랜드","10","40","Speyburn 10"],["싱글톤 12년","싱글몰트","스코틀랜드","12","40","Singleton 12"],["카듀 12년","싱글몰트","스코틀랜드","12","40","Cardhu 12"],["주라 10년","싱글몰트","스코틀랜드","10","40","Jura 10"],["주라 12년","싱글몰트","스코틀랜드","12","40","Jura 12"],["토버모리 12년","싱글몰트","스코틀랜드","12","46.3","Tobermory 12"],["레덕 10년","싱글몰트","스코틀랜드","10","46.3","Ledaig 10"],["벤로막 10년","싱글몰트","스코틀랜드","10","43","Benromach 10"],["아드모어 레거시","싱글몰트","스코틀랜드","","40","Ardmore Legacy"],["스카파 스키렌","싱글몰트","스코틀랜드","","40","Scapa Skiren"],["몽키 숄더","블렌디드 몰트","스코틀랜드","","40","Monkey Shoulder"],["빅 피트","블렌디드 몰트","스코틀랜드","","46","Big Peat"],["컴퍼스 박스 피트 몬스터","블렌디드 몰트","스코틀랜드","","46","Compass Box Peat Monster"],["컴퍼스 박스 스파이스 트리","블렌디드 몰트","스코틀랜드","","46","Compass Box Spice Tree"],["조니워커 그린 라벨 15년","블렌디드 몰트","스코틀랜드","15","43","Johnnie Walker Green Label"],["조니워커 레드 라벨","블렌디드","스코틀랜드","","40","Johnnie Walker Red Label"],["조니워커 블랙 라벨 12년","블렌디드","스코틀랜드","12","40","Johnnie Walker Black Label"],["조니워커 더블 블랙","블렌디드","스코틀랜드","","40","Johnnie Walker Double Black"],["조니워커 골드 리저브","블렌디드","스코틀랜드","","40","Johnnie Walker Gold Reserve"],["조니워커 18년","블렌디드","스코틀랜드","18","40","Johnnie Walker 18"],["조니워커 블루 라벨","블렌디드","스코틀랜드","","40","Johnnie Walker Blue Label"],["발렌타인 파이니스트","블렌디드","스코틀랜드","","40","Ballantine's Finest"],["발렌타인 12년","블렌디드","스코틀랜드","12","40","Ballantine's 12"],["발렌타인 17년","블렌디드","스코틀랜드","17","40","Ballantine's 17"],["발렌타인 21년","블렌디드","스코틀랜드","21","40","Ballantine's 21"],["발렌타인 30년","블렌디드","스코틀랜드","30","40","Ballantine's 30"],["시바스 리갈 12년","블렌디드","스코틀랜드","12","40","Chivas Regal 12"],["시바스 리갈 18년","블렌디드","스코틀랜드","18","40","Chivas Regal 18"],["시바스 리갈 25년","블렌디드","스코틀랜드","25","40","Chivas Regal 25"],["시바스 리갈 미즈나라","블렌디드","스코틀랜드","12","40","Chivas Regal Mizunara"],["로얄 살루트 21년","블렌디드","스코틀랜드","21","40","Royal Salute 21"],["듀어스 화이트 라벨","블렌디드","스코틀랜드","","40","Dewar's White Label"],["듀어스 12년","블렌디드","스코틀랜드","12","40","Dewar's 12"],["듀어스 15년","블렌디드","스코틀랜드","15","40","Dewar's 15"],["그란츠 트리플 우드","블렌디드","스코틀랜드","","40","Grant's Triple Wood"],["페이머스 그라우스","블렌디드","스코틀랜드","","40","Famous Grouse"],["커티삭","블렌디드","스코틀랜드","","40","Cutty Sark"],["J&B 레어","블렌디드","스코틀랜드","","40","J&B Rare"],["올드파 12년","블렌디드","스코틀랜드","12","40","Old Parr 12"],["윈저 12년","블렌디드","스코틀랜드","12","40","Windsor 12"],["임페리얼 12년","블렌디드","스코틀랜드","12","40","Imperial 12"],["화이트 호스","블렌디드","스코틀랜드","","40","White Horse"],["벨즈","블렌디드","스코틀랜드","","40","Bell's"],["티처스 하이랜드 크림","블렌디드","스코틀랜드","","40","Teacher's"],["메이커스 마크","버번","미국","","45","Maker's Mark"],["메이커스 마크 46","버번","미국","","47","Maker's Mark 46"],["버팔로 트레이스","버번","미국","","45","Buffalo Trace"],["이글 레어 10년","버번","미국","10","45","Eagle Rare 10"],["블랜튼 오리지널","버번","미국","","46.5","Blanton's Original"],["와일드 터키 81","버번","미국","","40.5","Wild Turkey 81"],["와일드 터키 101","버번","미국","","50.5","Wild Turkey 101"],["와일드 터키 레어 브리드","버번","미국","","","Wild Turkey Rare Breed"],["와일드 터키 롱브랜치","버번","미국","","43","Wild Turkey Longbranch"],["러셀 리저브 10년","버번","미국","10","45","Russell's Reserve 10"],["짐빔 화이트","버번","미국","","40","Jim Beam White"],["짐빔 블랙","버번","미국","","43","Jim Beam Black"],["놉 크릭 9년","버번","미국","9","50","Knob Creek 9"],["베이커스 7년","버번","미국","7","53.5","Baker's 7"],["부커스","버번","미국","","","Booker's"],["우드포드 리저브","버번","미국","","43.2","Woodford Reserve"],["우드포드 리저브 더블 오크드","버번","미국","","45.2","Woodford Reserve Double Oaked"],["포 로지스 버번","버번","미국","","40","Four Roses Bourbon"],["포 로지스 스몰 배치","버번","미국","","45","Four Roses Small Batch"],["포 로지스 싱글 배럴","버번","미국","","50","Four Roses Single Barrel"],["에반 윌리엄스 블랙","버번","미국","","43","Evan Williams Black"],["일라이저 크레이그 스몰 배치","버번","미국","","47","Elijah Craig Small Batch"],["1792 스몰 배치","버번","미국","","46.85","1792 Small Batch"],["엔젤스 엔비","버번","미국","","43.3","Angel's Envy"],["바질 헤이든","버번","미국","","40","Basil Hayden"],["올드 포레스터 86","버번","미국","","43","Old Forester 86"],["올드 포레스터 1920","버번","미국","","57.5","Old Forester 1920"],["불렛 버번","버번","미국","","45","Bulleit Bourbon"],["미치터스 US1 버번","버번","미국","","45.7","Michter's US1 Bourbon"],["웰러 스페셜 리저브","버번","미국","","45","Weller Special Reserve"],["웰러 12년","버번","미국","12","45","Weller 12"],["헨리 맥케나 보틀드 인 본드","버번","미국","10","50","Henry McKenna Bottled in Bond"],["잭 다니엘스 올드 No.7","테네시","미국","","40","Jack Daniel's Old No.7"],["잭 다니엘스 젠틀맨 잭","테네시","미국","","40","Gentleman Jack"],["잭 다니엘스 싱글 배럴 셀렉트","테네시","미국","","45","Jack Daniel's Single Barrel"],["조지 디켈 No.12","테네시","미국","","45","George Dickel No.12"],["불렛 라이","라이","미국","","45","Bulleit Rye"],["와일드 터키 라이","라이","미국","","40.5","Wild Turkey Rye"],["와일드 터키 101 라이","라이","미국","","50.5","Wild Turkey 101 Rye"],["미치터스 US1 라이","라이","미국","","42.4","Michter's US1 Rye"],["리텐하우스 라이","라이","미국","","50","Rittenhouse Rye"],["사제락 라이","라이","미국","","45","Sazerac Rye"],["놉 크릭 라이","라이","미국","","50","Knob Creek Rye"],["우드포드 리저브 라이","라이","미국","","45.2","Woodford Reserve Rye"],["휘슬피그 10년","라이","미국","10","50","WhistlePig 10"],["올드 오버홀트","라이","미국","","43","Old Overholt"],["크라운 로얄","캐나디안","캐나다","","40","Crown Royal"],["캐나디안 클럽","캐나디안","캐나다","","40","Canadian Club"],["제임슨","아이리시","아일랜드","","40","Jameson"],["제임슨 블랙 배럴","아이리시","아일랜드","","40","Jameson Black Barrel"],["제임슨 18년","아이리시","아일랜드","18","40","Jameson 18"],["부시밀 오리지널","아이리시","아일랜드","","40","Bushmills Original"],["부시밀 블랙 부시","아이리시","아일랜드","","40","Black Bush"],["부시밀 10년","아이리시","아일랜드","10","40","Bushmills 10"],["부시밀 16년","아이리시","아일랜드","16","40","Bushmills 16"],["레드브레스트 12년","아이리시","아일랜드","12","40","Redbreast 12"],["그린 스팟","아이리시","아일랜드","","40","Green Spot"],["툴라모어 듀","아이리시","아일랜드","","40","Tullamore D.E.W."],["틸링 스몰 배치","아이리시","아일랜드","","46","Teeling Small Batch"],["파워스 골드 라벨","아이리시","아일랜드","","43.2","Powers Gold Label"],["코네마라 피티드","아이리시","아일랜드","","40","Connemara Peated"],["히비키 재패니즈 하모니","재패니즈","일본","","43","Hibiki Harmony"],["히비키 17년","재패니즈","일본","17","43","Hibiki 17"],["히비키 21년","재패니즈","일본","21","43","Hibiki 21"],["야마자키 디스틸러스 리저브","재패니즈","일본","","43","Yamazaki Distiller's Reserve"],["야마자키 12년","재패니즈","일본","12","43","Yamazaki 12"],["야마자키 18년","재패니즈","일본","18","43","Yamazaki 18"],["하쿠슈 디스틸러스 리저브","재패니즈","일본","","43","Hakushu Distiller's Reserve"],["하쿠슈 12년","재패니즈","일본","12","43","Hakushu 12"],["산토리 가쿠빈","재패니즈","일본","","40","Suntory Kakubin"],["산토리 토키","재패니즈","일본","","43","Suntory Toki"],["산토리 로얄","재패니즈","일본","","43","Suntory Royal"],["산토리 올드","재패니즈","일본","","43","Suntory Old"],["치타","재패니즈","일본","","43","Chita"],["니카 프롬 더 배럴","재패니즈","일본","","51.4","Nikka From the Barrel"],["니카 요이치 싱글몰트","재패니즈","일본","","45","Nikka Yoichi"],["니카 미야기쿄 싱글몰트","재패니즈","일본","","45","Nikka Miyagikyo"],["니카 다케츠루 퓨어 몰트","재패니즈","일본","","43","Nikka Taketsuru"],["니카 코피 그레인","재패니즈","일본","","45","Nikka Coffey Grain"],["블랙 니카 클리어","재패니즈","일본","","37","Black Nikka Clear"],["이치로즈 몰트 앤 그레인 화이트 라벨","재패니즈","일본","","46","Ichiro's Malt & Grain"],["마스 이와이 트래디션","재패니즈","일본","","40","Mars Iwai Tradition"],["아카시 화이트 오크","재패니즈","일본","","40","Akashi White Oak"],["카발란 클래식","싱글몰트","대만","","40","Kavalan Classic"],["카발란 셰리 오크","싱글몰트","대만","","46","Kavalan Sherry Oak"],["카발란 솔리스트 비노바리끄","싱글몰트","대만","","","Kavalan Solist Vinho Barrique"],["암룻 퓨전","싱글몰트","인도","","50","Amrut Fusion"],["폴 존 브릴리언스","싱글몰트","인도","","46","Paul John Brilliance"],["인드리 트리니","싱글몰트","인도","","46","Indri Trini"],["김창수 위스키","싱글몰트","한국","","","Kimchangsoo Whisky"],["기원 (쓰리소사이어티스)","싱글몰트","한국","","","Ki One Three Societies"],["펜더린 마데이라","싱글몰트","기타","","46","Penderyn Madeira"],["코츠월즈 싱글몰트","싱글몰트","기타","","46","Cotswolds Single Malt"],["스타워드 노바","싱글몰트","기타","","41","Starward Nova"]];
+const SHAPES=['클래식','스퀘어','스키니','라운드','디캔터'];
+const LABELS=[['#f3e7d3','#3a2412'],['#1c1a18','#e6c78a'],['#1f2f4a','#f3e7d3'],['#203a2c','#f0dca8'],['#5c1f24','#f3e7d3'],['#c9a24e','#2a1a0c']];
+const hash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+const autoLook=n=>({shape:hash(n)%SHAPES.length,label:hash(n+'L')%LABELS.length});
+const STYLES=['니트','온더락','하이볼','물 몇 방울','칵테일'];
+const FLAVORS=['바닐라','꿀','캐러멜','과일','시트러스','셰리','초콜릿','견과류','스모키','피트','스파이시','꽃향','오크','짭짤함'];
+const COLORS={'싱글몰트':'#c9822e','블렌디드':'#b5702a','버번':'#b85a1c','라이':'#9a4a22','재패니즈':'#d6a04a','아이리시':'#dcae52','블렌디드 몰트':'#c07a30','테네시':'#a85a24','캐나디안':'#c8903e','기타':'#8c6a3e'};
+function liquid(b){
+  if(/셰리|더블 캐스크|글렌드로낙|달모어|맥캘란/.test(b.name))return '#7e3218';
+  if(/라프로익|아드벡|라가불린|탈리스커|쿨일라|보모어|피트/.test(b.name))return '#d9a845';
+  return COLORS[b.type]||'#b5702a';
+}
+const d=(n)=>{const x=new Date();x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)};
+const SEED={
+  bottles:[
+    {id:'b1',bought:d(40),name:'글렌피딕 12년',type:'싱글몰트',country:'스코틀랜드',age:'12',abv:'40',price:'69000',left:65,status:'개봉'},
+    {id:'b2',bought:d(25),name:'라프로익 10년',type:'싱글몰트',country:'스코틀랜드',age:'10',abv:'40',price:'89000',left:30,status:'개봉'},
+    {id:'b3',bought:d(60),name:'메이커스 마크',type:'버번',country:'미국',age:'',abv:'45',price:'55000',left:80,status:'개봉'},
+    {id:'b4',bought:d(10),name:'히비키 하모니',type:'재패니즈',country:'일본',age:'',abv:'43',price:'190000',left:100,status:'미개봉'},
+    {id:'b5',bought:d(90),name:'조니워커 블랙',type:'블렌디드',country:'스코틀랜드',age:'12',abv:'40',price:'52000',left:15,status:'개봉'},
+    {id:'b6',bought:d(3),name:'맥캘란 12 셰리',type:'싱글몰트',country:'스코틀랜드',age:'12',abv:'40',price:'135000',left:100,status:'미개봉'}
+  ],
+  pours:[
+    {id:'p1',bottleId:'b2',name:'라프로익 10년',date:d(1),style:'니트',flavors:['피트','스모키','짭짤함'],rating:4,place:'집',memo:'첫 모금은 병원 냄새 ㅋㅋ 근데 끝맛이 달다'},
+    {id:'p2',bottleId:'b3',name:'메이커스 마크',date:d(3),style:'하이볼',flavors:['바닐라','캐러멜'],rating:5,place:'친구네',memo:'하이볼로 최고'},
+    {id:'p3',bottleId:'b1',name:'글렌피딕 12년',date:d(6),style:'온더락',flavors:['과일','꿀'],rating:4,place:'집',memo:''},
+    {id:'p4',bottleId:'',name:'발베니 14 캐리비안 캐스크',date:d(9),style:'니트',flavors:['꿀','바닐라','과일'],rating:5,place:'위스키 바',memo:'다음에 병으로 사고 싶음'},
+    {id:'p5',bottleId:'b5',name:'조니워커 블랙',date:d(12),style:'하이볼',flavors:['스모키','캐러멜'],rating:3,place:'집',memo:''}
+  ]
+};
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||{bottles:[],pours:[]}}catch(e){S={bottles:[],pours:[]}}
+function loadSample(){S=structuredClone(SEED);save();render();toast('예시 데이터를 불러왔어요')}
+function clearAll(){S={bottles:[],pours:[]};save();closeSheet();render();toast('모든 기록을 지웠어요')}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const todayStr=()=>new Date().toISOString().slice(0,10);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const $=id=>document.getElementById(id);
+const stars=n=>'★'.repeat(n)+'<span style="color:var(--line)">'+'★'.repeat(5-n)+'</span>';
+let shelfFilter='전체', calDate=new Date(), pickDay=null;
+
+/* 병 모양: 몸통 path, 술이 차기 시작하는 높이, 뚜껑, 라벨 위치 */
+const SHAPE_DEF=[
+ {p:'M22 8h16v18c0 6 14 10 14 24v90a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V50c0-14 14-18 14-24z',top:46,cap:'<rect x="20" y="0" width="20" height="12" rx="2"/>',lb:[11,80,38,34]},
+ {p:'M23 8h14v18l12 8v106a5 5 0 0 1-5 5H16a5 5 0 0 1-5-5V34l12-8z',top:38,cap:'<rect x="21" y="0" width="18" height="12" rx="1"/>',lb:[13,70,34,42]},
+ {p:'M25 8h10v28c0 6 8 8 8 18v86a6 6 0 0 1-6 6H23a6 6 0 0 1-6-6V54c0-10 8-12 8-18z',top:54,cap:'<rect x="24" y="0" width="12" height="12" rx="2"/>',lb:[18,84,24,36]},
+ {p:'M23 34h14v12c0 4 16 10 16 30v64a6 6 0 0 1-6 6H13a6 6 0 0 1-6-6V76c0-20 16-26 16-30z',top:66,cap:'<rect x="21" y="24" width="18" height="12" rx="2"/>',lb:[10,92,40,30]},
+ {p:'M24 34h12v6c0 2 18 8 18 26v74a6 6 0 0 1-6 6H12a6 6 0 0 1-6-6V66c0-18 18-24 18-26z',top:58,cap:'<rect x="26" y="24" width="8" height="12"/><circle cx="30" cy="16" r="11"/>',lb:[12,86,36,32]}
+];
+function bottleSVG(b,h=96){
+  const s=SHAPE_DEF[b.shape??autoLook(b.name).shape]||SHAPE_DEF[0];
+  const [lf,lt]=LABELS[b.label??autoLook(b.name).label]||LABELS[0];
+  const lv=Math.max(0,Math.min(100,b.left)), top=s.top+(100-lv)/100*(146-s.top), gid='g'+(b.id||'pv')+h+Math.random().toString(36).slice(2,6);
+  const [lx,ly,lw,lh]=s.lb, cx=lx+lw/2, nm=(b.name||'WHISKY').replace(/\s*\d+년.*$/,'').slice(0,6);
+  return `<svg viewBox="0 0 60 150" style="height:${h}px"><defs><clipPath id="${gid}"><path d="${s.p}"/></clipPath>
+  <linearGradient id="${gid}l" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset=".35" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient></defs>
+  <g clip-path="url(#${gid})"><rect width="60" height="150" fill="#ffffff0d"/><rect y="${top}" width="60" height="150" fill="${liquid(b)}"/><rect width="60" height="150" fill="url(#${gid}l)"/></g>
+  <path d="${s.p}" fill="none" stroke="#e2cba380" stroke-width="1.4"/>
+  <g fill="#82725f">${s.cap}</g>
+  ${b.status==='미개봉'?`<g fill="#c8644a">${s.cap}</g>`:''}
+  <rect x="${lx}" y="${ly}" width="${lw}" height="${lh}" rx="2" fill="${lf}"/>
+  <rect x="${lx+2}" y="${ly+2}" width="${lw-4}" height="${lh-4}" rx="1" fill="none" stroke="${lt}" stroke-opacity=".5" stroke-width=".6"/>
+  <text x="${cx}" y="${ly+lh*.45}" text-anchor="middle" font-size="${lw<30?4.6:5.6}" font-weight="700" fill="${lt}" font-family="'Gowun Batang',serif">${nm}</text>
+  <text x="${cx}" y="${ly+lh*.72}" text-anchor="middle" font-size="4.4" fill="${lt}" fill-opacity=".8" font-family="'Cormorant Garamond',serif">${b.age?b.age+' YEARS':(b.type||'').toUpperCase()}</text></svg>`;
+}
+const glassIc=s=>`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e2cba3" stroke-width="1.6">${s==='하이볼'?'<path d="M7 3h10l-1 18H8z"/><path d="M7.5 10h9"/>':'<path d="M5 6h14l-1.5 13a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2z"/><path d="M6 13h12"/>'}</svg>`;
+function pourCard(p,click=true){
+  return `<div class="pour" ${click?`onclick="openPourDetail('${p.id}')"`:''}><div class="ic">${glassIc(p.style)}</div>
+  <div style="flex:1;min-width:0"><div class="nm">${p.name}</div><div class="mt">${fmtDate(p.date)} · ${p.style}${p.place?' · '+p.place:''}</div>
+  ${p.flavors.length?`<div class="tags">${p.flavors.map(f=>`<span class="tag">${f}</span>`).join('')}</div>`:''}</div>
+  <div class="stars">${stars(p.rating)}</div></div>`;
+}
+function fmtDate(s){const t=todayStr();if(s===t)return '오늘';if(s===d(1))return '어제';const [y,m,dd]=s.split('-');return `${+m}월 ${+dd}일`}
+
+function render(){
+  const now=new Date();
+  $('today').innerHTML=`${now.getMonth()+1}월 ${now.getDate()}일<br>${'일월화수목금토'[now.getDay()]}요일`;
+  const todays=S.pours.filter(p=>p.date===todayStr());
+  $('heroText').innerHTML=todays.length?`오늘 <b>${todays.length}잔</b> 마셨어요.<br>천천히 즐겨요 🥃`:`오늘은 어떤 위스키를<br><b>한 잔</b> 해볼까요?`;
+  $('todayCount').textContent=todays.length?todays.length+'잔':'';
+  $('todayList').innerHTML=todays.length?todays.map(p=>pourCard(p)).join(''):'<div class="empty">아직 오늘 기록이 없어요</div>';
+  const open=S.bottles.filter(b=>b.status==='개봉'&&b.left>0);
+  const pick=open.sort((a,b)=>{const la=lastPour(a.id),lb=lastPour(b.id);return la.localeCompare(lb)})[0];
+  $('suggest').innerHTML=pick?`<div class="pour" onclick="openPour('${pick.id}')"><div class="ic" style="width:50px;height:64px">${bottleSVG(pick,56)}</div><div style="flex:1"><div class="nm">${pick.name}</div><div class="mt">${lastPour(pick.id)?'마지막으로 마신 지 '+daysAgo(lastPour(pick.id))+'일 · ':''}남은 양 ${pick.left}%</div></div><span class="tag">이걸로 기록</span></div>`:'<div class="empty">개봉한 병이 없어요</div>';
+  const rec=[...S.pours].filter(p=>p.date!==todayStr()).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
+  $('recent').innerHTML=rec.map(p=>pourCard(p)).join('')||'<div class="empty">기록이 없어요</div>';
+  renderShelf();renderLog();renderStats();renderSpend();
+}
+const lastPour=id=>S.pours.filter(p=>p.bottleId===id).map(p=>p.date).sort().pop()||'';
+const daysAgo=s=>Math.round((new Date(todayStr())-new Date(s))/864e5);
+
+function renderShelf(){
+  const fs=['전체','개봉','미개봉','다 마심',...TYPES.filter(t=>S.bottles.some(b=>b.type===t))];
+  $('filters').innerHTML=fs.map(f=>`<button class="chip ${f===shelfFilter?'on':''}" onclick="shelfFilter='${f}';renderShelf()">${f}</button>`).join('');
+  let bs=S.bottles.filter(b=>shelfFilter==='전체'||b.status===shelfFilter||b.type===shelfFilter);
+  let html='';
+  for(let i=0;i<Math.max(bs.length,1);i+=4){
+    html+='<div class="row">'+bs.slice(i,i+4).map(b=>`<button class="bt" onclick="openBottleDetail('${b.id}')">${bottleSVG(b)}<span>${b.name}</span></button>`).join('')+'</div>';
+  }
+  $('shelf').innerHTML=bs.length?html:'<div class="row"><div style="grid-column:1/5;text-align:center;color:var(--dim);font-size:13px;padding:30px 0">'+(S.bottles.length?'비어 있어요':'아직 모은 위스키가 없어요<br><br><button class="btn" onclick="openBottle()">+ 첫 병 추가하기</button><br><br><span class="link" style="color:var(--amber);cursor:pointer" onclick="loadSample()">예시 데이터로 둘러보기</span>')+'</div></div>';
+}
+
+function renderLog(){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  $('calTitle').textContent=`${y}년 ${m+1}월`;
+  const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+  let h='일월화수목금토'.split('').map(w=>`<div class="w">${w}</div>`).join('');
+  for(let i=0;i<first;i++)h+='<div></div>';
+  for(let i=1;i<=days;i++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    const n=S.pours.filter(p=>p.date===ds).length;
+    h+=`<button class="d ${n?'has l'+Math.min(n,3):''} ${ds===todayStr()?'today':''}" onclick="pickDay=pickDay==='${ds}'?null:'${ds}';renderLog()" style="${pickDay===ds?'outline:2px solid var(--cream)':''}">${i}</button>`;
+  }
+  $('cal').innerHTML=h;
+  const mm=`${y}-${String(m+1).padStart(2,'0')}`;
+  let ps=S.pours.filter(p=>pickDay?p.date===pickDay:p.date.startsWith(mm)).sort((a,b)=>b.date.localeCompare(a.date));
+  $('logTitle').innerHTML=pickDay?`${fmtDate(pickDay)} 기록 <span class="link" onclick="pickDay=null;renderLog()">이번 달 전체</span>`:`이번 달 ${ps.length}잔`;
+  $('logList').innerHTML=ps.map(p=>pourCard(p)).join('')||'<div class="empty">기록이 없어요</div>';
+}
+function moveMonth(n){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+n,1);pickDay=null;renderLog()}
+
+function renderStats(){
+  const mm=todayStr().slice(0,7);
+  const thisMonth=S.pours.filter(p=>p.date.startsWith(mm)).length;
+  const cnt={};S.pours.forEach(p=>cnt[p.name]=(cnt[p.name]||0)+1);
+  const fav=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  const avg=S.pours.length?(S.pours.reduce((s,p)=>s+p.rating,0)/S.pours.length).toFixed(1):'-';
+  $('statGrid').innerHTML=`
+   <div class="stat"><div class="n">${S.bottles.length}</div><div class="l">모은 병</div></div>
+   <div class="stat"><div class="n">${thisMonth}</div><div class="l">이번 달 마신 잔</div></div>
+   <div class="stat"><div class="n">${avg}</div><div class="l">평균 별점</div></div>
+   <div class="stat"><div class="n" style="font-family:'Gowun Batang';font-size:17px;line-height:1.3">${fav?fav[0]:'-'}</div><div class="l">가장 많이 마신 위스키</div></div>`;
+  const bars=(obj)=>{const e=Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,6);const mx=e[0]?e[0][1]:1;return e.map(([k,v])=>`<div class="bar"><span class="lb">${k}</span><div class="tr"><i style="width:${v/mx*100}%"></i></div><span>${v}</span></div>`).join('')||'<div style="color:var(--dim);font-size:13px">기록이 쌓이면 보여요</div>'};
+  const fl={},st={};S.pours.forEach(p=>{p.flavors.forEach(f=>fl[f]=(fl[f]||0)+1);st[p.style]=(st[p.style]||0)+1});
+  $('flavorBars').innerHTML=bars(fl);$('styleBars').innerHTML=bars(st);
+}
+
+let spendYear=new Date().getFullYear();
+function seg(i){document.querySelectorAll('.seg button').forEach((b,j)=>b.classList.toggle('on',i===j));$('rp-taste').style.display=i?'none':'block';$('rp-spend').style.display=i?'block':'none'}
+const won=n=>Math.round(n).toLocaleString()+'원';
+const man=n=>n>=10000?(n/10000).toFixed(n%10000?1:0).replace(/\.0$/,'')+'만':n?Math.round(n/1000)+'천':'';
+function renderSpend(){
+  const bs=S.bottles.filter(b=>+b.price>0);
+  const total=bs.reduce((s,b)=>s+ +b.price,0);
+  const ty=String(new Date().getFullYear()), tm=todayStr().slice(0,7);
+  const yearSum=bs.filter(b=>(b.bought||'').startsWith(ty)).reduce((s,b)=>s+ +b.price,0);
+  const monSum=bs.filter(b=>(b.bought||'').startsWith(tm)).reduce((s,b)=>s+ +b.price,0);
+  const top=[...bs].sort((a,b)=>b.price-a.price)[0];
+  $('spendHero').innerHTML=`<div class="l">위스키 수집에 쓴 총 금액</div><div class="big">${total.toLocaleString()}<small>원</small></div>
+   <div class="sub"><div><b>${bs.length}병</b><span>구매가 기록</span></div><div><b>${bs.length?won(total/bs.length):'-'}</b><span>병당 평균</span></div><div><b>${won(monSum)}</b><span>이번 달</span></div></div>
+   ${top?`<div style="font-size:12px;color:var(--muted);margin-top:12px">가장 비싼 병 · <span style="color:var(--cream)">${top.name}</span> ${won(+top.price)} &nbsp;|&nbsp; 올해 ${won(yearSum)}</div>`:''}`;
+  const years=[...new Set(bs.map(b=>(b.bought||'').slice(0,4)).filter(Boolean).concat(ty))].sort();
+  $('yearSel').innerHTML=years.map(y=>`<span onclick="spendYear=${y};renderSpend()" style="margin-left:8px;cursor:pointer;${+y===spendYear?'color:var(--cream);font-weight:700':'color:var(--dim)'}">${y}</span>`).join('');
+  const ms=Array.from({length:12},(_,i)=>{const k=spendYear+'-'+String(i+1).padStart(2,'0');return bs.filter(b=>(b.bought||'').startsWith(k)).reduce((s,b)=>s+ +b.price,0)});
+  const mx=Math.max(...ms,1);
+  $('months').innerHTML=ms.map((v,i)=>`<div class="m ${v?'has':''} ${spendYear+'-'+String(i+1).padStart(2,'0')===tm?'cur':''}"><em>${man(v)}</em><i style="height:${v?Math.max(6,v/mx*90):3}px"></i><span>${i+1}</span></div>`).join('');
+  const bt={};bs.forEach(b=>bt[b.type]=(bt[b.type]||0)+ +b.price);
+  const e=Object.entries(bt).sort((a,b)=>b[1]-a[1]),m2=e[0]?e[0][1]:1;
+  $('typeSpend').innerHTML=e.map(([k,v])=>`<div class="bar"><span class="lb">${k}</span><div class="tr"><i style="width:${v/m2*100}%"></i></div><span style="min-width:74px;text-align:right">${won(v)}</span></div>`).join('')||'<div style="color:var(--dim);font-size:13px">병을 추가할 때 구매가를 적으면 보여요</div>';
+  const list=[...bs].sort((a,b)=>(b.bought||'').localeCompare(a.bought||''));
+  $('buyList').innerHTML=list.map(b=>`<div class="pour" onclick="openBottleDetail('${b.id}')"><div class="ic" style="width:40px;height:56px">${bottleSVG(b,50)}</div><div style="flex:1;min-width:0"><div class="nm">${b.name}</div><div class="mt">${b.bought?b.bought.replace(/-/g,'.'):'구매일 미입력'}${b.shop?' · '+b.shop:''}</div></div><div style="font-weight:700;color:var(--amber2)">${won(+b.price)}</div></div>`).join('')||'<div class="empty" style="margin:0">아직 구매 기록이 없어요</div>';
+}
+function go(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
+  document.querySelectorAll('nav button[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  window.scrollTo(0,0);
+}
+function sheet(html){$('sheet').innerHTML='<div class="grab"></div>'+html;$('dim').classList.add('on')}
+function closeSheet(){$('dim').classList.remove('on')}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1600)}
+const chips=(name,arr,sel,multi)=>`<div class="opts" data-name="${name}">${arr.map(a=>`<span class="chip ${(multi?sel.includes(a):sel===a)?'on':''}" onclick="${multi?'this.classList.toggle(\'on\')':`[...this.parentNode.children].forEach(c=>c.classList.remove('on'));this.classList.add('on')`}">${a}</span>`).join('')}</div>`;
+const picked=(name)=>[...document.querySelectorAll(`[data-name="${name}"] .chip.on`)].map(c=>c.textContent);
+
+/* 한 잔 기록 */
+let rateVal=4;
+function openPour(bid,pid){
+  const p=pid?S.pours.find(x=>x.id===pid):null;
+  rateVal=p?p.rating:4;
+  const sel=p?p.bottleId:(bid||'');
+  sheet(`<h3>${p?'기록 수정':'오늘의 한 잔'}</h3>
+  <div class="f"><label>어떤 위스키?</label><select id="pBottle" onchange="$('pNameWrap').style.display=this.value?'none':'block'">
+    <option value="">직접 입력 (바·친구집 등)</option>${S.bottles.filter(b=>b.status!=='다 마심'||b.id===sel).map(b=>`<option value="${b.id}" ${b.id===sel?'selected':''}>${b.name}</option>`).join('')}</select></div>
+  <div class="f" id="pNameWrap" style="display:${sel?'none':'block'}"><label>위스키 이름</label><input id="pName" placeholder="예) 발베니 12년 더블우드" value="${p&&!p.bottleId?p.name:''}"></div>
+  <div class="two"><div class="f"><label>날짜</label><input type="date" id="pDate" value="${p?p.date:todayStr()}"></div>
+  <div class="f"><label>어디서?</label><input id="pPlace" placeholder="집, 바…" value="${p?p.place:''}"></div></div>
+  <div class="f"><label>마신 방식</label>${chips('style',STYLES,p?p.style:'니트')}</div>
+  <div class="f"><label>느낀 맛 (여러 개)</label>${chips('flv',FLAVORS,p?p.flavors:[],true)}</div>
+  <div class="f"><label>별점</label><div class="rate" id="rate"></div></div>
+  <div class="f"><label>한 줄 메모</label><textarea id="pMemo" rows="2" placeholder="오늘의 느낌을 남겨요">${p?p.memo:''}</textarea></div>
+  ${!p?`<div class="f" id="sipWrap"><label>병에서 줄일 양: <b id="sipV">5</b>%</label><input type="range" id="sip" min="0" max="20" value="5" oninput="$('sipV').textContent=this.value"></div>`:''}
+  <button class="btn full" onclick="savePour('${pid||''}')">${p?'수정 완료':'기록하기'}</button>
+  ${p?`<button class="del" onclick="delPour('${pid}')">이 기록 삭제</button>`:''}`);
+  drawRate();
+}
+function drawRate(){$('rate').innerHTML=[1,2,3,4,5].map(i=>`<button class="${i<=rateVal?'on':''}" onclick="rateVal=${i};drawRate()">★</button>`).join('')}
+function savePour(pid){
+  const bid=$('pBottle').value, b=S.bottles.find(x=>x.id===bid);
+  const name=b?b.name:$('pName').value.trim();
+  if(!name){toast('위스키 이름을 적어주세요');return}
+  const data={bottleId:bid,name,date:$('pDate').value||todayStr(),place:$('pPlace').value.trim(),style:picked('style')[0]||'니트',flavors:picked('flv'),rating:rateVal,memo:$('pMemo').value.trim()};
+  if(pid){Object.assign(S.pours.find(x=>x.id===pid),data)}
+  else{S.pours.push({id:uid(),...data});
+    if(b){b.left=Math.max(0,b.left-(+$('sip').value));if(b.status==='미개봉')b.status='개봉';if(b.left===0)b.status='다 마심'}}
+  save();closeSheet();render();toast(pid?'수정했어요':'한 잔 기록 완료 🥃');
+}
+function delPour(id){S.pours=S.pours.filter(p=>p.id!==id);save();closeSheet();render();toast('삭제했어요')}
+function openPourDetail(id){
+  const p=S.pours.find(x=>x.id===id);
+  sheet(`<h3>${p.name}</h3><div style="margin-bottom:12px">${stars(p.rating)}</div>
+  <dl class="kv"><dt>날짜</dt><dd>${fmtDate(p.date)} (${p.date})</dd><dt>방식</dt><dd>${p.style}</dd>${p.place?`<dt>장소</dt><dd>${p.place}</dd>`:''}</dl>
+  ${p.flavors.length?`<div class="tags" style="display:flex;gap:6px;flex-wrap:wrap;margin:14px 0">${p.flavors.map(f=>`<span class="tag">${f}</span>`).join('')}</div>`:''}
+  ${p.memo?`<p style="background:var(--panel2);padding:14px;border-radius:12px;font-family:'Gowun Batang';line-height:1.6">“${p.memo}”</p>`:''}
+  <div class="rowbtn"><button class="btn ghost" onclick="openPour(null,'${id}')">수정</button><button class="btn" onclick="closeSheet()">닫기</button></div>`);
+}
+
+/* 병 */
+let look={shape:0,label:0,touched:false};
+function openBottle(id){
+  const b=id?S.bottles.find(x=>x.id===id):null;
+  look=b?{shape:b.shape??autoLook(b.name).shape,label:b.label??autoLook(b.name).label,touched:b.shape!=null}:{shape:0,label:0,touched:false};
+  sheet(`<h3>${b?'병 정보 수정':'새 병 추가'}</h3>
+  <div class="preview"><div id="pv"></div><div class="pvside">
+    <label>병 모양</label><div class="opts" id="shapeOpts"></div>
+    <label style="margin-top:10px">라벨 색</label><div class="sw" id="labelOpts"></div></div></div>
+  <div class="f" style="position:relative"><label>위스키 이름 검색</label><input id="bName" autocomplete="off" placeholder="예) 글렌, 라프로익, 히비키…" value="${b?b.name:''}" oninput="suggestDB(this.value);preview()">
+    <div class="ac" id="ac"></div></div>
+  <div class="f"><label>종류</label><div onclick="setTimeout(preview)">${chips('type',TYPES,b?b.type:'싱글몰트')}</div></div>
+  <div class="two"><div class="f"><label>나라</label><input id="bCountry" value="${b?b.country:''}" placeholder="스코틀랜드"></div>
+  <div class="f"><label>숙성 연수</label><input id="bAge" inputmode="numeric" value="${b?b.age:''}" placeholder="12"></div></div>
+  <div class="two"><div class="f"><label>도수(%)</label><input id="bAbv" inputmode="decimal" value="${b?b.abv:''}" placeholder="40"></div>
+  <div class="f"><label>구매가(원)</label><input id="bPrice" inputmode="numeric" value="${b&&b.price?(+b.price).toLocaleString():''}" placeholder="69,000" oninput="const v=this.value.replace(/\D/g,'');this.value=v?(+v).toLocaleString():''"></div></div>
+  <div class="two"><div class="f"><label>구매일</label><input type="date" id="bBought" value="${b?(b.bought||''):todayStr()}"></div>
+  <div class="f"><label>구매처</label><input id="bShop" placeholder="데일리샷, 면세점…" value="${b?(b.shop||''):''}"></div></div>
+  <div class="f"><label>상태</label>${chips('status',['미개봉','개봉','다 마심'],b?b.status:'미개봉')}</div>
+  <div class="f"><label>남은 양: <b id="lv">${b?b.left:100}</b>%</label><input type="range" id="bLeft" min="0" max="100" step="5" value="${b?b.left:100}" oninput="$('lv').textContent=this.value;preview()"></div>
+  <button class="btn full" onclick="saveBottle('${id||''}')">${b?'저장':'위스키 장에 넣기'}</button>
+  ${b?`<button class="del" onclick="delBottle('${id}')">이 병 삭제</button>`:''}`);
+  $('bAge').addEventListener('input',preview);
+  document.querySelector('[data-name="status"]').addEventListener('click',()=>setTimeout(preview));
+  preview();
+}
+function curBottle(){return {id:'pv',name:$('bName').value.trim()||'WHISKY',type:picked('type')[0]||'기타',age:$('bAge').value.trim(),status:picked('status')[0]||'미개봉',left:+$('bLeft').value,shape:look.shape,label:look.label}}
+function preview(){
+  const n=$('bName').value.trim();
+  if(!look.touched&&n){const a=autoLook(n);look.shape=a.shape;look.label=a.label}
+  $('pv').innerHTML=bottleSVG(curBottle(),150);
+  $('shapeOpts').innerHTML=SHAPES.map((s,i)=>`<span class="chip ${i===look.shape?'on':''}" onclick="look.shape=${i};look.touched=true;preview()">${s}</span>`).join('');
+  $('labelOpts').innerHTML=LABELS.map((c,i)=>`<button style="background:${c[0]}" class="${i===look.label?'on':''}" onclick="look.label=${i};look.touched=true;preview()"></button>`).join('');
+}
+function suggestDB(q){
+  q=q.trim().replace(/\s/g,'');
+  const lq=q.toLowerCase();const r=q?DB.filter(w=>w[0].replace(/\s/g,'').includes(q)||w[5].toLowerCase().replace(/[\s'.]/g,'').includes(lq.replace(/['.]/g,''))).slice(0,8):[];
+  $('ac').innerHTML=r.map(w=>`<button onclick="pickDB('${w[0]}')"><b>${w[0]}</b><span>${w[5]} · ${w[1]} · ${w[2]}${w[4]?' · '+w[4]+'%':''}</span></button>`).join('');
+  $('ac').style.display=r.length?'block':'none';
+}
+function pickDB(n){
+  const w=DB.find(x=>x[0]===n);
+  $('bName').value=w[0];$('bCountry').value=w[2];$('bAge').value=w[3];$('bAbv').value=w[4];
+  document.querySelectorAll('[data-name="type"] .chip').forEach(c=>c.classList.toggle('on',c.textContent===w[1]));
+  $('ac').style.display='none';look.touched=false;preview();toast('정보를 자동으로 채웠어요');
+}
+function saveBottle(id){
+  const name=$('bName').value.trim();if(!name){toast('이름을 적어주세요');return}
+  const data={name,type:picked('type')[0]||'기타',country:$('bCountry').value.trim(),age:$('bAge').value.trim(),abv:$('bAbv').value.trim(),price:$('bPrice').value.replace(/\D/g,''),bought:$('bBought').value,shop:$('bShop').value.trim(),status:picked('status')[0]||'미개봉',left:+$('bLeft').value,shape:look.shape,label:look.label};
+  if(id)Object.assign(S.bottles.find(x=>x.id===id),data);else S.bottles.push({id:uid(),...data});
+  save();closeSheet();render();toast(id?'저장했어요':'위스키 장에 넣었어요');
+}
+function delBottle(id){S.bottles=S.bottles.filter(b=>b.id!==id);save();closeSheet();render();toast('삭제했어요')}
+function openBottleDetail(id){
+  const b=S.bottles.find(x=>x.id===id), ps=S.pours.filter(p=>p.bottleId===id).sort((a,c)=>c.date.localeCompare(a.date));
+  const avg=ps.length?(ps.reduce((s,p)=>s+p.rating,0)/ps.length).toFixed(1):'-';
+  sheet(`<div class="detail-top">${bottleSVG(b,130)}<div><span class="tag">${b.status}</span><h3 style="margin:8px 0 10px">${b.name}</h3>
+  <dl class="kv"><dt>종류</dt><dd>${b.type}</dd>${b.country?`<dt>나라</dt><dd>${b.country}</dd>`:''}${b.age?`<dt>숙성</dt><dd>${b.age}년</dd>`:''}${b.abv?`<dt>도수</dt><dd>${b.abv}%</dd>`:''}${b.price?`<dt>가격</dt><dd>${(+b.price).toLocaleString()}원</dd>`:''}${b.bought?`<dt>구매일</dt><dd>${b.bought.replace(/-/g,'.')}</dd>`:''}${b.shop?`<dt>구매처</dt><dd>${b.shop}</dd>`:''}<dt>남은 양</dt><dd>${b.left}%</dd><dt>마신 횟수</dt><dd>${ps.length}잔 · 평균 ★${avg}</dd></dl></div></div>
+  <div class="rowbtn"><button class="btn ghost" onclick="openBottle('${id}')">정보 수정</button><button class="btn" onclick="openPour('${id}')">+ 한 잔 기록</button></div>
+  <h3 style="font-size:16px;margin:22px 0 10px">이 병의 기록</h3>
+  <div style="display:flex;flex-direction:column;gap:8px">${ps.map(p=>pourCard(p,false)).join('')||'<div class="empty" style="margin:0">아직 마신 기록이 없어요</div>'}</div>`);
+}
+render();
+</script>
+</body>
+</html>
