@@ -667,7 +667,8 @@ function drawAcct(){
     <div class="avatar">${esc((NICK||'?').slice(0,1))}</div>
     <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:16px">${NICK?esc(NICK):'닉네임 없음'}</div><div style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis">${IS_ANON?'이 기기에 저장된 계정':esc(CUR_EMAIL)}</div></div>
     <button class="btn ghost" style="padding:7px 12px;font-size:12px" onclick="openNick()">닉네임 변경</button></div>
-    ${IS_ANON?`<p style="font-size:12px;color:var(--amber2);background:var(--panel2);border-radius:10px;padding:10px;margin-top:12px;line-height:1.5">기록은 서버에 안전하게 저장돼요. 다만 이 계정은 이 기기·이 브라우저에 연결돼 있어서, 브라우저 데이터를 지우거나 다른 기기에서는 이어서 볼 수 없어요. 홈 화면에 설치해서 쓰면 가장 안전해요.</p>`:''}
+    ${IS_ANON?`<p style="font-size:12px;color:var(--amber2);background:var(--panel2);border-radius:10px;padding:10px;margin-top:12px;line-height:1.5">지금 계정은 이 기기·이 브라우저에만 연결돼 있어요. 다른 기기에서도 같은 기록을 보려면 이메일을 연결해 주세요.</p>
+    <button class="btn full" style="margin-top:10px" onclick="openLink()">이메일 연결하기</button>`:''}
     <button class="auth-link" style="margin:14px 0 0" onclick="logout()">${IS_ANON?'계정에서 나가기':'로그아웃'}</button></div>`;
   render();
 }
@@ -682,6 +683,34 @@ async function saveNick(){
   const {error}=await sb.auth.updateUser({data:{nickname:v}});
   if(error){toast('저장하지 못했어요');return}
   NICK=v;closeSheet();drawAcct();toast('닉네임을 저장했어요');
+}
+function openLink(){
+  sheet(`<h3>이메일 연결하기</h3>
+  <p style="color:var(--muted);font-size:14px;margin-bottom:16px;line-height:1.6">이메일과 비밀번호를 등록하면, 다른 브라우저나 휴대폰에서 <b style="color:var(--cream)">"이메일 계정으로 로그인"</b>으로 같은 기록을 볼 수 있어요. 지금까지의 기록은 그대로 이어져요.</p>
+  <form onsubmit="event.preventDefault();doLink()">
+    <div class="f"><label>이메일</label><input id="lEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+    <div class="f"><label>비밀번호 (6자 이상)</label><input id="lPw" type="password" minlength="6" autocomplete="new-password" required></div>
+    <div class="f"><label>비밀번호 확인</label><input id="lPw2" type="password" minlength="6" autocomplete="new-password" required></div>
+    <p style="font-size:12px;color:var(--amber2);margin:-4px 0 14px">⚠️ 지금은 비밀번호 찾기 기능이 없어요. 비밀번호를 꼭 기억해 두세요.</p>
+    <p id="lMsg" class="auth-msg" style="display:none"></p>
+    <button class="btn full" id="lBtn">연결하기</button>
+  </form>`);
+}
+async function doLink(){
+  const email=$('lEmail').value.trim(),pw=$('lPw').value,pw2=$('lPw2').value,msg=t=>{$('lMsg').style.display='block';$('lMsg').textContent=t;$('lBtn').disabled=false;$('lBtn').textContent='연결하기'};
+  if(pw!==pw2)return msg('비밀번호 확인이 일치하지 않아요.');
+  $('lBtn').disabled=true;$('lBtn').textContent='연결하는 중…';
+  let r=await sb.auth.updateUser({email});
+  if(r.error)return msg(errKo(r.error));
+  r=await sb.auth.updateUser({password:pw});
+  if(r.error){
+    if(/verif|confirm/i.test(r.error.message))return msg('이메일 확인이 필요하다고 나와요. 운영자에게 알려 주세요.');
+    return msg(errKo(r.error));
+  }
+  await sb.auth.refreshSession();
+  const {data}=await sb.auth.getUser();
+  if(data.user){CUR_EMAIL=data.user.email||email;IS_ANON=!!data.user.is_anonymous}
+  closeSheet();drawAcct();toast('이메일을 연결했어요! 다른 기기에서도 로그인할 수 있어요');
 }
 async function importOld(){
   const old=JSON.parse(localStorage.getItem(KEY));const map={};
