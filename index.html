@@ -15,6 +15,7 @@
 <title>DRAVÉ — 나의 위스키 기록</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#192720; --panel:#1f2f27; --panel2:#283a31; --line:#33473c;
@@ -151,6 +152,16 @@ input[type=range]{accent-color:var(--amber);padding:0!important;background:none!
 .install .x{color:var(--dim);font-size:18px;padding:4px}
 .ios-step{display:flex;gap:12px;align-items:center;background:var(--panel2);border-radius:12px;padding:12px;margin-bottom:8px;font-size:14px}
 .ios-step i{flex:none;width:26px;height:26px;border-radius:50%;background:var(--amber);color:#192720;font-style:normal;font-weight:700;display:grid;place-items:center}
+.authwrap{position:fixed;inset:0;z-index:15;background:var(--bg);display:none;overflow:auto}
+.authwrap.on{display:block}
+.auth-in{max-width:400px;margin:0 auto;padding:calc(48px + env(safe-area-inset-top)) 24px 40px}
+.auth-logo{width:72px;height:72px;border-radius:18px;display:block;margin:0 auto 14px}
+.auth-sub{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 26px}
+.chk{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:10px}
+.chk input{accent-color:var(--amber);width:16px;height:16px}.chk a{color:var(--amber2)}
+.auth-msg{background:var(--panel2);border-radius:12px;padding:12px;font-size:13px;color:var(--amber2);margin:6px 0}
+.auth-link{display:block;margin:14px auto 0;font-size:13px;color:var(--muted);text-decoration:underline}
+.auth-foot{text-align:center;font-size:11px;color:var(--dim);margin-top:30px}
 .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--amber2);color:#192720;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:.3s;pointer-events:none;z-index:20}
 .toast.on{opacity:1}
 </style>
@@ -219,10 +230,12 @@ input[type=range]{accent-color:var(--amber);padding:0!important;background:none!
       <div class="list" id="buyList"></div>
       <p style="font-size:11px;color:var(--dim);text-align:center;margin:18px 16px 0">구매가를 적은 병만 계산돼요 · 병 정보에서 언제든 수정할 수 있어요</p>
     </div>
-    <button class="del" style="margin-top:28px;color:var(--dim)" onclick="sheet('<h3>모든 기록을 지울까요?</h3><p style=&quot;color:var(--muted);font-size:14px;margin-bottom:18px&quot;>모은 병과 마신 기록이 모두 사라지고 되돌릴 수 없어요.</p><div class=&quot;rowbtn&quot;><button class=&quot;btn ghost&quot; onclick=&quot;closeSheet()&quot;>취소</button><button class=&quot;btn&quot; style=&quot;background:var(--red);color:var(--cream)&quot; onclick=&quot;clearAll()&quot;>모두 지우기</button></div>')">모든 기록 지우기</button>
+    <h2 style="font-size:16px;margin-top:30px">내 계정</h2><div id="acct"></div>
+    <button class="del" style="margin-top:20px;color:var(--dim)" onclick="sheet('<h3>모든 기록을 지울까요?</h3><p style=&quot;color:var(--muted);font-size:14px;margin-bottom:18px&quot;>모은 병과 마신 기록이 모두 사라지고 되돌릴 수 없어요.</p><div class=&quot;rowbtn&quot;><button class=&quot;btn ghost&quot; onclick=&quot;closeSheet()&quot;>취소</button><button class=&quot;btn&quot; style=&quot;background:var(--red);color:var(--cream)&quot; onclick=&quot;clearAll()&quot;>모두 지우기</button></div>')">모든 기록 지우기</button>
   </section>
 </div>
 
+<div class="authwrap" id="auth"></div>
 <nav>
   <button class="on" data-v="home" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
   <button data-v="shelf" onclick="go('shelf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6v4l2 3v12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V9l2-3z"/><path d="M7 13h10"/></svg>컬렉션</button>
@@ -270,12 +283,12 @@ const SEED={
   ]
 };
 let S;
-try{S=JSON.parse(localStorage.getItem(KEY))||{bottles:[],pours:[]}}catch(e){S={bottles:[],pours:[]}}
-function loadSample(){S=structuredClone(SEED);save();render();toast('예시 데이터를 불러왔어요')}
-function clearAll(){S={bottles:[],pours:[]};save();closeSheet();render();toast('모든 기록을 지웠어요')}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+S={bottles:[],pours:[]};
+async function loadSample(){const d=structuredClone(SEED);d.bottles.forEach(b=>b.id=uid());d.pours.forEach(p=>{p.bottleId=d.bottles[+p.bottleId.slice(1)-1]?.id||'';p.id=uid()});S.bottles.push(...d.bottles);S.pours.push(...d.pours);render();await cloud.upsertMany(d.bottles,d.pours)&&toast('예시 데이터를 불러왔어요')}
+async function clearAll(){S={bottles:[],pours:[]};closeSheet();render();await cloud.clearAll()&&toast('모든 기록을 지웠어요')}
+const save=()=>{try{if(CUR_USER)localStorage.setItem(KEY+'-'+CUR_USER,JSON.stringify(S))}catch(e){}};
 const todayStr=()=>new Date().toISOString().slice(0,10);
-const uid=()=>Math.random().toString(36).slice(2,9);
+const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,10));
 const $=id=>document.getElementById(id);
 const stars=n=>'★'.repeat(n)+'<span style="color:var(--line)">'+'★'.repeat(5-n)+'</span>';
 let shelfFilter='전체', calDate=new Date(), pickDay=null;
@@ -439,12 +452,14 @@ function savePour(pid){
   const name=b?b.name:$('pName').value.trim();
   if(!name){toast('위스키 이름을 적어주세요');return}
   const data={bottleId:bid,name,date:$('pDate').value||todayStr(),place:$('pPlace').value.trim(),style:picked('style')[0]||'니트',flavors:picked('flv'),rating:rateVal,memo:$('pMemo').value.trim()};
-  if(pid){Object.assign(S.pours.find(x=>x.id===pid),data)}
-  else{S.pours.push({id:uid(),...data});
+  let rec;
+  if(pid){rec=Object.assign(S.pours.find(x=>x.id===pid),data)}
+  else{rec={id:uid(),...data};S.pours.push(rec);
     if(b){b.left=Math.max(0,b.left-(+$('sip').value));if(b.status==='미개봉')b.status='개봉';if(b.left===0)b.status='다 마심'}}
-  save();closeSheet();render();toast(pid?'수정했어요':'한 잔 기록 완료 🥃');
+  save();closeSheet();render();
+  cloud.upsertMany(!pid&&b?[b]:[],[rec]).then(ok=>ok&&toast(pid?'수정했어요':'한 잔 기록 완료 🥃'));
 }
-function delPour(id){S.pours=S.pours.filter(p=>p.id!==id);save();closeSheet();render();toast('삭제했어요')}
+function delPour(id){S.pours=S.pours.filter(p=>p.id!==id);save();closeSheet();render();cloud.del('pours',id).then(ok=>ok&&toast('삭제했어요'))}
 function openPourDetail(id){
   const p=S.pours.find(x=>x.id===id);
   sheet(`<h3>${p.name}</h3><div style="margin-bottom:12px">${stars(p.rating)}</div>
@@ -503,10 +518,11 @@ function pickDB(n){
 function saveBottle(id){
   const name=$('bName').value.trim();if(!name){toast('이름을 적어주세요');return}
   const data={name,type:picked('type')[0]||'기타',country:$('bCountry').value.trim(),age:$('bAge').value.trim(),abv:$('bAbv').value.trim(),price:$('bPrice').value.replace(/\D/g,''),bought:$('bBought').value,shop:$('bShop').value.trim(),status:picked('status')[0]||'미개봉',left:+$('bLeft').value,shape:look.shape,label:look.label};
-  if(id)Object.assign(S.bottles.find(x=>x.id===id),data);else S.bottles.push({id:uid(),...data});
-  save();closeSheet();render();toast(id?'저장했어요':'위스키 장에 넣었어요');
+  let rec;if(id)rec=Object.assign(S.bottles.find(x=>x.id===id),data);else{rec={id:uid(),...data};S.bottles.push(rec)}
+  save();closeSheet();render();
+  cloud.upsertMany([rec],[]).then(ok=>ok&&toast(id?'저장했어요':'위스키 장에 넣었어요'));
 }
-function delBottle(id){S.bottles=S.bottles.filter(b=>b.id!==id);save();closeSheet();render();toast('삭제했어요')}
+function delBottle(id){S.bottles=S.bottles.filter(b=>b.id!==id);save();closeSheet();render();cloud.del('bottles',id).then(ok=>ok&&toast('삭제했어요'))}
 function openBottleDetail(id){
   const b=S.bottles.find(x=>x.id===id), ps=S.pours.filter(p=>p.bottleId===id).sort((a,c)=>c.date.localeCompare(a.date));
   const avg=ps.length?(ps.reduce((s,p)=>s+p.rating,0)/ps.length).toFixed(1):'-';
@@ -516,7 +532,112 @@ function openBottleDetail(id){
   <h3 style="font-size:16px;margin:22px 0 10px">이 병의 기록</h3>
   <div style="display:flex;flex-direction:column;gap:8px">${ps.map(p=>pourCard(p,false)).join('')||'<div class="empty" style="margin:0">아직 마신 기록이 없어요</div>'}</div>`);
 }
+/* ── 로그인 & 클라우드 저장 (Supabase) ── */
+const SB_URL='https://krsspmovqxucgocfeaec.supabase.co';
+const SB_KEY='sb_publishable_l0Q4Pc2ucOpYBG2bKtXiDA_02xNPyTU'; // 공개용 키 (잠금 규칙으로 보호됨)
+const sb=window.supabase?window.supabase.createClient(SB_URL,SB_KEY):null;
+let CUR_USER=null, CUR_EMAIL='';
+const toRowB=b=>({id:b.id,name:b.name,type:b.type||null,country:b.country||null,age:b.age||null,abv:b.abv||null,price:b.price?+b.price:null,bought:b.bought||null,shop:b.shop||null,status:b.status,left_pct:b.left,shape:b.shape??null,label:b.label??null,updated_at:new Date().toISOString()});
+const toRowP=p=>({id:p.id,bottle_id:p.bottleId||null,name:p.name,date:p.date,style:p.style,flavors:p.flavors||[],rating:p.rating,place:p.place||null,memo:p.memo||null,updated_at:new Date().toISOString()});
+const fromB=r=>({id:r.id,name:r.name,type:r.type||'기타',country:r.country||'',age:r.age||'',abv:r.abv||'',price:r.price?String(r.price):'',bought:r.bought||'',shop:r.shop||'',status:r.status||'미개봉',left:r.left_pct??100,shape:r.shape??undefined,label:r.label??undefined});
+const fromP=r=>({id:r.id,bottleId:r.bottle_id||'',name:r.name,date:r.date,style:r.style||'니트',flavors:r.flavors||[],rating:r.rating||0,place:r.place||'',memo:r.memo||''});
+const cloud={
+  async upsertMany(bs,ps){
+    try{
+      if(bs.length){const {error}=await sb.from('bottles').upsert(bs.map(toRowB));if(error)throw error}
+      if(ps.length){const {error}=await sb.from('pours').upsert(ps.map(toRowP));if(error)throw error}
+      return true;
+    }catch(e){console.error(e);toast('저장하지 못했어요. 인터넷 연결을 확인해 주세요');return false}
+  },
+  async del(t,id){
+    const {error}=await sb.from(t).delete().eq('id',id);
+    if(error){console.error(error);toast('삭제하지 못했어요');return false}return true;
+  },
+  async clearAll(){
+    const a=await sb.from('pours').delete().eq('user_id',CUR_USER);const b=await sb.from('bottles').delete().eq('user_id',CUR_USER);
+    if(a.error||b.error){toast('지우지 못했어요');return false}return true;
+  },
+  async load(){
+    const [b,p]=await Promise.all([sb.from('bottles').select('*').order('created_at'),sb.from('pours').select('*').order('date')]);
+    if(b.error||p.error)throw (b.error||p.error);
+    return {bottles:b.data.map(fromB),pours:p.data.map(fromP)};
+  }
+};
+
+/* 로그인 화면 */
+let authMode='login';
+function authScreen(msg){
+  $('auth').innerHTML=`<div class="auth-in">
+    <img src="icons/icon-192.png" alt="" class="auth-logo">
+    <div class="logo" style="text-align:center;font-size:36px">DRAVÉ</div>
+    <p class="auth-sub">모은 위스키와 오늘의 한 잔을 기록해요</p>
+    <div class="seg" style="margin:0 0 18px"><button class="${authMode==='login'?'on':''}" onclick="authMode='login';authScreen()">로그인</button><button class="${authMode==='signup'?'on':''}" onclick="authMode='signup';authScreen()">회원가입</button></div>
+    <form onsubmit="event.preventDefault();doAuth()">
+      <div class="f"><label>이메일</label><input id="aEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+      <div class="f"><label>비밀번호${authMode==='signup'?' (6자 이상)':''}</label><input id="aPw" type="password" minlength="6" autocomplete="${authMode==='signup'?'new-password':'current-password'}" required></div>
+      ${authMode==='signup'?`<label class="chk"><input type="checkbox" id="aAge" required> 만 19세 이상입니다</label>
+      <label class="chk"><input type="checkbox" id="aPriv" required> <span><a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다</span></label>`:''}
+      ${msg?`<p class="auth-msg">${msg}</p>`:''}
+      <button class="btn full" id="aBtn" style="margin-top:8px">${authMode==='login'?'로그인':'가입하고 시작하기'}</button>
+    </form>
+    ${authMode==='login'?`<button class="auth-link" onclick="resetPw()">비밀번호를 잊었어요</button>`:''}
+    <p class="auth-foot">DRAVÉ는 만 19세 이상을 위한 서비스예요 · 지나친 음주는 건강에 해로워요</p>
+  </div>`;
+  $('auth').classList.add('on');
+}
+async function doAuth(){
+  const email=$('aEmail').value.trim(),password=$('aPw').value;$('aBtn').disabled=true;$('aBtn').textContent='잠시만요…';
+  if(authMode==='signup'){
+    const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
+    if(error)return authScreen(errKo(error));
+    if(!data.session){authMode='login';return authScreen('가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요.')}
+  }else{
+    const {error}=await sb.auth.signInWithPassword({email,password});
+    if(error)return authScreen(errKo(error));
+  }
+}
+async function resetPw(){
+  const email=($('aEmail')||{}).value?.trim();if(!email)return authScreen('이메일을 먼저 입력해 주세요.');
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  authScreen(error?errKo(error):'비밀번호 재설정 메일을 보냈어요.');
+}
+function errKo(e){const m=(e.message||'').toLowerCase();
+  if(m.includes('invalid login'))return '이메일 또는 비밀번호가 맞지 않아요.';
+  if(m.includes('already registered')||m.includes('already been registered'))return '이미 가입된 이메일이에요. 로그인해 주세요.';
+  if(m.includes('email not confirmed'))return '메일함에서 가입 확인 링크를 먼저 눌러 주세요.';
+  if(m.includes('rate limit')||m.includes('too many'))return '요청이 너무 많아요. 잠시 후 다시 시도해 주세요.';
+  if(m.includes('password'))return '비밀번호는 6자 이상으로 해 주세요.';
+  return '문제가 생겼어요: '+e.message;}
+async function logout(){await sb.auth.signOut();S={bottles:[],pours:[]};render();go('home')}
+
+async function onLogin(user){
+  CUR_USER=user.id;CUR_EMAIL=user.email||'';
+  $('auth').classList.remove('on');
+  try{const c=JSON.parse(localStorage.getItem(KEY+'-'+CUR_USER));if(c){S=c;render()}}catch(e){}
+  try{S=await cloud.load();save();render()}catch(e){console.error(e);toast('기록을 불러오지 못했어요')}
+  $('acct').innerHTML=`<div class="box" style="display:flex;align-items:center;gap:10px;font-size:13px"><span style="flex:1;color:var(--muted)">로그인: <b style="color:var(--cream)">${CUR_EMAIL}</b></span><button class="btn ghost" style="padding:7px 14px;font-size:12px" onclick="logout()">로그아웃</button></div>`;
+  // 예전 버전(이 기기에만 저장)의 기록이 있으면 가져오기 제안
+  try{const old=JSON.parse(localStorage.getItem(KEY));
+    if(old&&(old.bottles?.length||old.pours?.length)&&!S.bottles.length&&!S.pours.length){
+      sheet(`<h3>이 기기에 있던 기록을 가져올까요?</h3><p style="color:var(--muted);font-size:14px;margin-bottom:18px">로그인 전에 이 기기에 저장한 병 ${old.bottles.length}개, 마신 기록 ${old.pours.length}개가 있어요. 계정으로 옮기면 어느 기기에서든 볼 수 있어요.</p>
+      <div class="rowbtn"><button class="btn ghost" onclick="localStorage.removeItem(KEY);closeSheet()">안 가져올래요</button><button class="btn" onclick="importOld()">가져오기</button></div>`);
+    }}catch(e){}
+}
+async function importOld(){
+  const old=JSON.parse(localStorage.getItem(KEY));const map={};
+  old.bottles.forEach(b=>{const n=uid();map[b.id]=n;b.id=n});old.pours.forEach(p=>{p.id=uid();p.bottleId=map[p.bottleId]||''});
+  S.bottles.push(...old.bottles);S.pours.push(...old.pours);closeSheet();render();
+  if(await cloud.upsertMany(old.bottles,old.pours)){localStorage.removeItem(KEY);save();toast('기록을 계정으로 옮겼어요')}
+}
+
 render();
+if(!sb){toast('로그인 서비스에 연결하지 못했어요')}
+else{
+  sb.auth.onAuthStateChange((ev,session)=>{
+    if(session?.user){if(CUR_USER!==session.user.id)onLogin(session.user)}
+    else{CUR_USER=null;authScreen()}
+  });
+}
 
 /* ── 홈 화면 설치 (PWA) ── */
 let deferredPrompt=null;
