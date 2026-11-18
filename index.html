@@ -309,6 +309,7 @@ S={bottles:[],pours:[]};
 async function loadSample(){const d=structuredClone(SEED);d.bottles.forEach(b=>b.id=uid());d.pours.forEach(p=>{p.bottleId=d.bottles[+p.bottleId.slice(1)-1]?.id||'';p.id=uid()});S.bottles.push(...d.bottles);S.pours.push(...d.pours);render();await cloud.upsertMany(d.bottles,d.pours)&&toast('예시 데이터를 불러왔어요')}
 async function clearAll(){S={bottles:[],pours:[]};closeSheet();render();await cloud.clearAll()&&toast('모든 기록을 지웠어요')}
 const save=()=>{try{if(CUR_USER)localStorage.setItem(KEY+'-'+CUR_USER,JSON.stringify(S))}catch(e){}};
+const toNum=v=>{const d=String(v||'').normalize('NFKC').replace(/[^0-9]/g,'').slice(0,12);return d?String(+d):''};
 const todayStr=()=>new Date().toISOString().slice(0,10);
 const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,10));
 const $=id=>document.getElementById(id);
@@ -508,7 +509,7 @@ function openBottle(id){
   <div class="two"><div class="f"><label>나라</label><input id="bCountry" value="${b?b.country:''}" placeholder="스코틀랜드"></div>
   <div class="f"><label>숙성 연수</label><input id="bAge" inputmode="numeric" value="${b?b.age:''}" placeholder="12"></div></div>
   <div class="two"><div class="f"><label>도수(%)</label><input id="bAbv" inputmode="decimal" value="${b?b.abv:''}" placeholder="40"></div>
-  <div class="f"><label>구매가(원)</label><input id="bPrice" inputmode="numeric" value="${b&&b.price?(+b.price).toLocaleString():''}" placeholder="69,000" oninput="const v=this.value.replace(/\D/g,'');this.value=v?(+v).toLocaleString():''"></div></div>
+  <div class="f"><label>구매가(원)</label><input id="bPrice" inputmode="numeric" value="${b&&b.price?(+b.price).toLocaleString():''}" placeholder="69,000" oninput="const v=toNum(this.value);this.value=v?(+v).toLocaleString():''"></div></div>
   <div class="two"><div class="f"><label>구매일</label><input type="date" id="bBought" value="${b?(b.bought||''):todayStr()}"></div>
   <div class="f"><label>구매처</label><input id="bShop" placeholder="데일리샷, 면세점…" value="${b?(b.shop||''):''}"></div></div>
   <div class="f"><label>상태</label>${chips('status',['미개봉','개봉','다 마심'],b?b.status:'미개봉')}</div>
@@ -539,9 +540,10 @@ function pickDB(n){
   document.querySelectorAll('[data-name="type"] .chip').forEach(c=>c.classList.toggle('on',c.textContent===w[1]));
   $('ac').style.display='none';look.touched=false;preview();toast('정보를 자동으로 채웠어요');
 }
-function saveBottle(id){
+function saveBottle(id){try{_saveBottle(id)}catch(e){console.error(e);toast('오류: '+e.message)}}
+function _saveBottle(id){
   const name=$('bName').value.trim();if(!name){toast('이름을 적어주세요');return}
-  const data={name,type:picked('type')[0]||'기타',country:$('bCountry').value.trim(),age:$('bAge').value.trim(),abv:$('bAbv').value.trim(),price:$('bPrice').value.replace(/\D/g,''),bought:$('bBought').value,shop:$('bShop').value.trim(),status:picked('status')[0]||'미개봉',left:+$('bLeft').value,shape:look.shape,label:look.label};
+  const data={name,type:picked('type')[0]||'기타',country:$('bCountry').value.trim(),age:$('bAge').value.trim(),abv:$('bAbv').value.trim(),price:toNum($('bPrice').value),bought:$('bBought').value,shop:$('bShop').value.trim(),status:picked('status')[0]||'미개봉',left:+$('bLeft').value,shape:look.shape,label:look.label};
   let rec;if(id)rec=Object.assign(S.bottles.find(x=>x.id===id),data);else{rec={id:uid(),...data};S.bottles.push(rec)}
   save();closeSheet();render();
   cloud.upsertMany([rec],[]).then(ok=>ok&&toast(id?'저장했어요':'위스키 장에 넣었어요'));
@@ -571,7 +573,7 @@ const cloud={
       if(bs.length){const {error}=await sb.from('bottles').upsert(bs.map(toRowB));if(error)throw error}
       if(ps.length){const {error}=await sb.from('pours').upsert(ps.map(toRowP));if(error)throw error}
       return true;
-    }catch(e){console.error(e);toast('저장하지 못했어요. 인터넷 연결을 확인해 주세요');return false}
+    }catch(e){console.error(e);toast('저장하지 못했어요 ('+((e&&(e.code||e.message))||'알 수 없는 오류')+')');return false}
   },
   async del(t,id){
     const {error}=await sb.from(t).delete().eq('id',id);
