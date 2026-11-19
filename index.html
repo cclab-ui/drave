@@ -286,7 +286,8 @@ function liquid(b){
   if(/라프로익|아드벡|라가불린|탈리스커|쿨일라|보모어|피트/.test(b.name))return '#d9a845';
   return COLORS[b.type]||'#b5702a';
 }
-const d=(n)=>{const x=new Date();x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)};
+const ymd=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+const d=(n)=>{const x=new Date();x.setDate(x.getDate()-n);return ymd(x)};
 const SEED={
   bottles:[
     {id:'b1',bought:d(40),name:'글렌피딕 12년',type:'싱글몰트',country:'스코틀랜드',age:'12',abv:'40',price:'69000',left:65,status:'개봉'},
@@ -310,7 +311,7 @@ async function loadSample(){const d=structuredClone(SEED);d.bottles.forEach(b=>b
 async function clearAll(){S={bottles:[],pours:[]};closeSheet();render();await cloud.clearAll()&&toast('모든 기록을 지웠어요')}
 const save=()=>{try{if(CUR_USER)localStorage.setItem(KEY+'-'+CUR_USER,JSON.stringify(S))}catch(e){}};
 const toNum=v=>{const d=String(v||'').normalize('NFKC').replace(/[^0-9]/g,'').slice(0,12);return d?String(+d):''};
-const todayStr=()=>new Date().toISOString().slice(0,10);
+const todayStr=()=>ymd(new Date());
 const uid=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,10));
 const $=id=>document.getElementById(id);
 const stars=n=>'★'.repeat(n)+'<span style="color:var(--line)">'+'★'.repeat(5-n)+'</span>';
