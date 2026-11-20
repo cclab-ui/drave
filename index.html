@@ -601,13 +601,12 @@ function authScreen(msg){
       <p class="auth-sub">모은 위스키와 오늘의 한 잔을 기록해요</p>
       <form onsubmit="event.preventDefault();startAnon()">
         <div class="f"><label>닉네임만 정하면 바로 시작해요</label><input id="sNick" maxlength="12" required placeholder="예) 피트러버 (12자 이내)"></div>
-        <label class="chk"><input type="checkbox" id="sAge" required> 만 19세 이상입니다</label>
         <label class="chk"><input type="checkbox" id="sPriv" required> <span><a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다</span></label>
         ${msg?`<p class="auth-msg">${msg}</p>`:''}
         <button class="btn full" id="sBtn" style="margin-top:8px">시작하기</button>
       </form>
       <button class="auth-link" onclick="authMode='login';authScreen()">이메일 계정으로 로그인</button>
-      <p class="auth-foot">DRAVÉ는 만 19세 이상을 위한 서비스예요 · 지나친 음주는 건강에 해로워요</p>
+      <p class="auth-foot">지나친 음주는 건강에 해로워요</p>
     </div>`;
     $('auth').classList.add('on');return;
   }
@@ -630,13 +629,12 @@ function _authScreenEmail(msg){
       <div class="f"><label>이메일</label><input id="aEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
       ${authMode==='signup'?`<p style="font-size:12px;color:var(--amber2);margin:-6px 0 12px">⚠️ 지금은 비밀번호 찾기 기능이 없어요. 비밀번호를 꼭 기억해 두세요.</p>`:''}
       <div class="f"><label>비밀번호${authMode==='signup'?' (6자 이상)':''}</label><input id="aPw" type="password" minlength="6" autocomplete="${authMode==='signup'?'new-password':'current-password'}" required></div>
-      ${authMode==='signup'?`<label class="chk"><input type="checkbox" id="aAge" required> 만 19세 이상입니다</label>
-      <label class="chk"><input type="checkbox" id="aPriv" required> <span><a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다</span></label>`:''}
+      ${authMode==='signup'?`      <label class="chk"><input type="checkbox" id="aPriv" required> <span><a href="privacy.html" target="_blank">개인정보처리방침</a>에 동의합니다</span></label>`:''}
       ${msg?`<p class="auth-msg">${msg}</p>`:''}
       <button class="btn full" id="aBtn" style="margin-top:8px">${authMode==='login'?'로그인':'가입하고 시작하기'}</button>
     </form>
     <button class="auth-link" onclick="authMode='start';authScreen()">← 닉네임으로 바로 시작하기</button>
-    <p class="auth-foot">DRAVÉ는 만 19세 이상을 위한 서비스예요 · 지나친 음주는 건강에 해로워요</p>
+    <p class="auth-foot">지나친 음주는 건강에 해로워요</p>
   </div>`;
   $('auth').classList.add('on');
 }
