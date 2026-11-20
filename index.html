@@ -606,7 +606,6 @@ function authScreen(msg){
         <button class="btn full" id="sBtn" style="margin-top:8px">시작하기</button>
       </form>
       <button class="auth-link" onclick="authMode='login';authScreen()">이메일 계정으로 로그인</button>
-      <p class="auth-foot">지나친 음주는 건강에 해로워요</p>
     </div>`;
     $('auth').classList.add('on');return;
   }
@@ -634,7 +633,6 @@ function _authScreenEmail(msg){
       <button class="btn full" id="aBtn" style="margin-top:8px">${authMode==='login'?'로그인':'가입하고 시작하기'}</button>
     </form>
     <button class="auth-link" onclick="authMode='start';authScreen()">← 닉네임으로 바로 시작하기</button>
-    <p class="auth-foot">지나친 음주는 건강에 해로워요</p>
   </div>`;
   $('auth').classList.add('on');
 }
